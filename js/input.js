@@ -33,8 +33,8 @@ class InputSystem {
             // Transform to exact World coordinates via Camera & Resolution Scaler!
             const worldPos = InputSystem.getPointerWorldPos(game, e.clientX, e.clientY);
 
-            // Middle mouse button pans camera
-            if (e.button === 1) {
+            // Middle mouse button or mobile pan mode pans camera
+            if (e.button === 1 || game.pointerMode === 'pan') {
                 game.pointer.isPanning = true;
                 game.pointer.lastPanX = e.clientX;
                 game.pointer.lastPanY = e.clientY;
@@ -52,6 +52,7 @@ class InputSystem {
             if (game.phase === 'deployment' && game.deployment && game.deployment.active) {
                 if (e.button === 2) {
                     game.deployment.removeAt(game, worldPos.x, worldPos.y);
+                    if (window.MobileHaptics) window.MobileHaptics.trigger('light');
                     return;
                 }
                 game.pointer.x = worldPos.x;
@@ -74,13 +75,14 @@ class InputSystem {
             // Active Ability deployment
             if (game.activeAbility) {
                 game.deployAbilityAt(game.activeAbility, worldPos.x, worldPos.y);
+                if (window.MobileHaptics) window.MobileHaptics.trigger('heavy');
                 game.activeAbility = null;
                 game.pointer.isDown = false;
                 game.updateHUD();
                 return;
             }
 
-            // Right click OR Command Mode triggers line drag
+            // Right click OR Command Mode (default on mobile) triggers line drag
             if (e.button === 2 || game.pointerMode === 'command') {
                 game.pointer.action = 'line';
                 game.pointer.linePoints = [{ x: worldPos.x, y: worldPos.y }];
@@ -129,95 +131,113 @@ class InputSystem {
                     } else {
                         game.deployment.deployLine(game, game.pointer.startX, game.pointer.startY, worldPos.x, worldPos.y);
                     }
+                    if (window.MobileHaptics) window.MobileHaptics.trigger('medium');
                 }
                 game.pointer.isDown = false;
                 game.pointer.action = null;
                 return;
             }
 
-            // Focus Fire Intercept: If clicked directly on an enemy, concentrate all battalion fire!
+            // Universal Tap Intercept (dragDist < 18): Works for both mobile taps and mouse clicks!
             if (dragDist < 18) {
+                // 1. Focus Fire: If tapped on an enemy, concentrate all battalion fire!
                 const clickedEnemy = InputSystem.getEnemyAt(game, worldPos.x, worldPos.y);
                 if (clickedEnemy) {
                     game.setPriorityTarget(clickedEnemy);
+                    if (window.MobileHaptics) window.MobileHaptics.trigger('heavy');
                     game.pointer.isDown = false;
                     game.pointer.action = null;
                     game.pointer.linePoints = [];
                     game.updateHUD();
                     return;
                 }
+
+                // 2. Select Allied Unit or Tank if tapped directly!
+                const clickedUnit = game.getAllyAt(worldPos.x, worldPos.y);
+                let clickedTank = null;
+                if (game.tanks) {
+                    clickedTank = game.tanks.find(t => t.team === 'ally' && !t.dead && Math.hypot(t.x - worldPos.x, t.y - worldPos.y) <= t.radius + 10);
+                }
+
+                if (clickedUnit) {
+                    game.units.forEach(u => {
+                        if (u.team === 'ally') u.selected = (u === clickedUnit);
+                    });
+                    if (game.tanks) game.tanks.forEach(t => t.selected = false);
+                    if (window.sound) window.sound.playClick();
+                    if (window.MobileHaptics) window.MobileHaptics.trigger('light');
+                    game.pointer.isDown = false;
+                    game.pointer.action = null;
+                    game.pointer.linePoints = [];
+                    game.updateHUD();
+                    return;
+                } else if (clickedTank) {
+                    game.units.forEach(u => u.selected = false);
+                    clickedTank.selected = true;
+                    if (window.sound) window.sound.playClick();
+                    if (window.MobileHaptics) window.MobileHaptics.trigger('light');
+                    game.pointer.isDown = false;
+                    game.pointer.action = null;
+                    game.pointer.linePoints = [];
+                    game.updateHUD();
+                    return;
+                }
+
+                // 3. Tapped on empty ground: Move selected units to that position!
+                game.issueFormationMove(worldPos.x, worldPos.y);
+                if (window.sound) window.sound.playClick();
+                if (window.MobileHaptics) window.MobileHaptics.trigger('light');
+                game.pointer.isDown = false;
+                game.pointer.action = null;
+                game.pointer.linePoints = [];
+                game.updateHUD();
+                return;
             }
 
+            // Drag actions (dragDist >= 18)
             if (game.pointer.action === 'line') {
-                if (dragDist < 18) {
-                    game.issueFormationMove(worldPos.x, worldPos.y);
-                } else {
-                    game.issueCustomLineFormation(game.pointer.startX, game.pointer.startY, worldPos.x, worldPos.y);
-                }
+                game.issueCustomLineFormation(game.pointer.startX, game.pointer.startY, worldPos.x, worldPos.y);
                 if (window.sound) window.sound.playClick();
+                if (window.MobileHaptics) window.MobileHaptics.trigger('medium');
             } else if (game.pointer.action === 'box') {
-                if (dragDist < 12) {
-                    // Check if clicked an allied soldier or tank
-                    const clickedUnit = game.getAllyAt(worldPos.x, worldPos.y);
-                    let clickedTank = null;
-                    if (game.tanks) {
-                        clickedTank = game.tanks.find(t => t.team === 'ally' && !t.dead && Math.hypot(t.x - worldPos.x, t.y - worldPos.y) <= t.radius + 8);
-                    }
+                // Box Selection
+                const minX = Math.min(game.pointer.startX, worldPos.x);
+                const maxX = Math.max(game.pointer.startX, worldPos.x);
+                const minY = Math.min(game.pointer.startY, worldPos.y);
+                const maxY = Math.max(game.pointer.startY, worldPos.y);
 
-                    if (clickedUnit) {
-                        game.units.forEach(u => {
-                            if (u.team === 'ally') u.selected = (u === clickedUnit);
-                        });
-                        if (game.tanks) game.tanks.forEach(t => t.selected = false);
-                        if (window.sound) window.sound.playClick();
-                    } else if (clickedTank) {
-                        game.units.forEach(u => u.selected = false);
-                        clickedTank.selected = true;
-                        if (window.sound) window.sound.playClick();
-                    } else {
-                        game.issueFormationMove(worldPos.x, worldPos.y);
-                        if (window.sound) window.sound.playClick();
+                let anyInside = false;
+                game.units.forEach(u => {
+                    if (u.team === 'ally' && !u.dead) {
+                        if (u.x >= minX && u.x <= maxX && u.y >= minY && u.y <= maxY) {
+                            anyInside = true;
+                        }
                     }
-                } else {
-                    // Box Selection
-                    const minX = Math.min(game.pointer.startX, worldPos.x);
-                    const maxX = Math.max(game.pointer.startX, worldPos.x);
-                    const minY = Math.min(game.pointer.startY, worldPos.y);
-                    const maxY = Math.max(game.pointer.startY, worldPos.y);
-
-                    let anyInside = false;
-                    game.units.forEach(u => {
-                        if (u.team === 'ally' && !u.dead) {
-                            if (u.x >= minX && u.x <= maxX && u.y >= minY && u.y <= maxY) {
+                });
+                if (game.tanks) {
+                    game.tanks.forEach(t => {
+                        if (t.team === 'ally' && !t.dead) {
+                            if (t.x >= minX && t.x <= maxX && t.y >= minY && t.y <= maxY) {
                                 anyInside = true;
                             }
+                        }
+                    });
+                }
+
+                if (anyInside) {
+                    game.units.forEach(u => {
+                        if (u.team === 'ally' && !u.dead) {
+                            u.selected = (u.x >= minX && u.x <= maxX && u.y >= minY && u.y <= maxY);
                         }
                     });
                     if (game.tanks) {
                         game.tanks.forEach(t => {
                             if (t.team === 'ally' && !t.dead) {
-                                if (t.x >= minX && t.x <= maxX && t.y >= minY && t.y <= maxY) {
-                                    anyInside = true;
-                                }
+                                t.selected = (t.x >= minX && t.x <= maxX && t.y >= minY && t.y <= maxY);
                             }
                         });
                     }
-
-                    if (anyInside) {
-                        game.units.forEach(u => {
-                            if (u.team === 'ally' && !u.dead) {
-                                u.selected = (u.x >= minX && u.x <= maxX && u.y >= minY && u.y <= maxY);
-                            }
-                        });
-                        if (game.tanks) {
-                            game.tanks.forEach(t => {
-                                if (t.team === 'ally' && !t.dead) {
-                                    t.selected = (t.x >= minX && t.x <= maxX && t.y >= minY && t.y <= maxY);
-                                }
-                            });
-                        }
-                        if (window.sound) window.sound.playClick();
-                    }
+                    if (window.sound) window.sound.playClick();
                 }
             }
 
@@ -301,6 +321,12 @@ class InputSystem {
         if (game.keys['s'] || game.keys['arrowdown'] || game.keys['س']) moveY += 1;
         if (game.keys['a'] || game.keys['arrowleft'] || game.keys['ش']) moveX -= 1;
         if (game.keys['d'] || game.keys['arrowright'] || game.keys['ي']) moveX += 1;
+
+        // Support mobile virtual analog joystick steering
+        if (game.joystick && game.joystick.active) {
+            moveX += game.joystick.x;
+            moveY += game.joystick.y;
+        }
 
         if (moveX !== 0 || moveY !== 0) {
             const len = Math.hypot(moveX, moveY);

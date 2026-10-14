@@ -265,6 +265,14 @@ class UIManager {
         if (pointsBadge && game.campaign) {
             pointsBadge.textContent = `${game.campaign.inkPoints} حبر`;
         }
+
+        // Mobile Top Header Badges Synchronization
+        const mobileAllyCount = document.getElementById('mobileAllyCount');
+        const mobileEnemyCount = document.getElementById('mobileEnemyCount');
+        const mobileInkPoints = document.getElementById('mobileInkPoints');
+        if (mobileAllyCount) mobileAllyCount.textContent = alliesAlive.length;
+        if (mobileEnemyCount) mobileEnemyCount.textContent = enemiesAlive.length;
+        if (mobileInkPoints && game.campaign) mobileInkPoints.textContent = `${game.campaign.inkPoints} حبر`;
     }
 
     static checkBattleOutcome(game) {
@@ -282,6 +290,10 @@ class UIManager {
 
             if (won && game.campaign) {
                 game.campaign.onBattleVictory(game);
+            }
+
+            if (window.MobileHaptics) {
+                window.MobileHaptics.trigger(won ? 'victory' : 'defeat');
             }
 
             const modal = document.getElementById('endGameModal');

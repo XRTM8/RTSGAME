@@ -16,7 +16,9 @@ class MenuManager {
             screenShake: 'normal', // 'normal' | 'light' | 'off'
             difficulty: 'normal',  // 'recruit' | 'normal' | 'veteran'
             combatText: true,
-            nightMode: false
+            nightMode: false,
+            hapticsEnabled: true,
+            joystickEnabled: true
         };
 
         this.loadSettings();
@@ -299,6 +301,47 @@ class MenuManager {
             btn.addEventListener('click', () => this.setScreenShake(btn.dataset.shake, game));
         });
 
+        // Mobile Haptics Toggle Button
+        const toggleHapticsSettingBtn = document.getElementById('toggleHapticsSettingBtn');
+        if (toggleHapticsSettingBtn) {
+            toggleHapticsSettingBtn.addEventListener('click', () => {
+                this.settings.hapticsEnabled = !this.settings.hapticsEnabled;
+                this.saveSettings();
+                this.updateUI();
+                if (window.MobileHaptics && this.settings.hapticsEnabled) {
+                    window.MobileHaptics.trigger('heavy');
+                }
+                if (window.sound) window.sound.playClick();
+                if (game) game.showToast(this.settings.hapticsEnabled ? '📳 تم تفعيل الاهتزاز التفاعلي للهواتف' : 'تم إيقاف الاهتزاز التفاعلي');
+            });
+        }
+
+        // Mobile Joystick Toggle Button in Menu
+        const toggleJoystickSettingBtn = document.getElementById('toggleJoystickSettingBtn');
+        if (toggleJoystickSettingBtn) {
+            toggleJoystickSettingBtn.addEventListener('click', () => {
+                this.settings.joystickEnabled = !this.settings.joystickEnabled;
+                this.saveSettings();
+                this.updateUI();
+                if (window.virtualJoystick) {
+                    if (this.settings.joystickEnabled) window.virtualJoystick.show();
+                    else window.virtualJoystick.hide();
+                }
+                if (window.sound) window.sound.playClick();
+                if (window.MobileHaptics) window.MobileHaptics.trigger('light');
+                if (game) game.showToast(this.settings.joystickEnabled ? '🕹️ تم إظهار عصا التحكم اللمسية' : 'تم إخفاء عصا التحكم اللمسية');
+            });
+        }
+
+        // Menu Fullscreen Button
+        const menuFullscreenBtn = document.getElementById('menuFullscreenBtn');
+        if (menuFullscreenBtn) {
+            menuFullscreenBtn.addEventListener('click', () => {
+                const headerFullscreenBtn = document.getElementById('headerFullscreenBtn');
+                if (headerFullscreenBtn) headerFullscreenBtn.click();
+            });
+        }
+
         // Exit / Quit Button
         const quitBattleBtn = document.getElementById('quitBattleBtn');
         if (quitBattleBtn) {
@@ -342,6 +385,20 @@ class MenuManager {
         document.querySelectorAll('.shake-btn').forEach(btn => {
             btn.classList.toggle('active-blue', btn.dataset.shake === this.settings.screenShake);
         });
+
+        // Update mobile haptics button
+        const hBtn = document.getElementById('toggleHapticsSettingBtn');
+        if (hBtn) {
+            hBtn.textContent = this.settings.hapticsEnabled ? '📳 الاهتزاز اللمسي: مفعل' : '📴 الاهتزاز اللمسي: معطل';
+            hBtn.classList.toggle('active-blue', this.settings.hapticsEnabled);
+        }
+
+        // Update mobile joystick setting button
+        const jBtn = document.getElementById('toggleJoystickSettingBtn');
+        if (jBtn) {
+            jBtn.textContent = this.settings.joystickEnabled ? '🕹️ عصا التحكم: مفعلة' : '🕹️ عصا التحكم: مخفية';
+            jBtn.classList.toggle('active-blue', this.settings.joystickEnabled);
+        }
 
         // Update campaign points badge inside menu
         const menuPoints = document.getElementById('menuInkPointsBadge');

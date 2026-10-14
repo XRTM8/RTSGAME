@@ -14,8 +14,8 @@ class BattleCamera {
 
         this.zoom = 1.0;
         this.targetZoom = 1.0;
-        this.minZoom = 0.8;
-        this.maxZoom = 1.5;
+        this.minZoom = 0.55;
+        this.maxZoom = 1.85;
 
         this.shakeIntensity = 0;
         this.shakeX = 0;
@@ -28,6 +28,14 @@ class BattleCamera {
 
     setZoom(newZoom) {
         this.targetZoom = Math.max(this.minZoom, Math.min(this.maxZoom, newZoom));
+    }
+
+    zoomIn(delta = 0.2) {
+        this.setZoom(this.targetZoom + delta);
+    }
+
+    zoomOut(delta = 0.2) {
+        this.setZoom(this.targetZoom - delta);
     }
 
     pan(dx, dy) {

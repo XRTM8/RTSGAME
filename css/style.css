@@ -198,3 +198,176 @@ body.night-theme #tacticalToast {
     color: #38bdf8 !important;
 }
 
+/* ==========================================================================
+   PROFESSIONAL MOBILE TOUCH & RESPONSIVE SUITE (دعم الهواتف واللمس)
+   ========================================================================== */
+
+/* 1. Mobile Safe-Area & Touch Defaults */
+html, body {
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+@supports (padding: env(safe-area-inset-top)) {
+    header {
+        padding-top: max(6px, env(safe-area-inset-top));
+        padding-left: max(8px, env(safe-area-inset-left));
+        padding-right: max(8px, env(safe-area-inset-right));
+    }
+    footer {
+        padding-bottom: max(6px, env(safe-area-inset-bottom));
+        padding-left: max(8px, env(safe-area-inset-left));
+        padding-right: max(8px, env(safe-area-inset-right));
+    }
+}
+
+/* 2. Touch Target Optimization */
+button, .sketch-btn {
+    touch-action: manipulation;
+}
+
+/* 3. Floating Mobile Tactical Camera Toolbar */
+.mobile-floating-bar {
+    position: absolute;
+    top: 68px;
+    left: 12px;
+    z-index: 25;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: auto;
+}
+
+.mobile-floating-btn {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 900;
+    padding: 0;
+}
+
+/* 4. Mobile Pointer Mode Floating Switcher Pill */
+.mobile-mode-pill {
+    position: absolute;
+    top: 68px;
+    right: 12px;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    pointer-events: auto;
+    padding: 4px 6px;
+}
+
+/* 5. Virtual Analog Touch Joystick */
+#virtualJoystickContainer {
+    position: fixed;
+    bottom: 84px;
+    left: 16px;
+    z-index: 30;
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#joystickBase {
+    position: relative;
+    width: 104px;
+    height: 104px;
+    border-radius: 50%;
+    background: rgba(247, 243, 232, 0.88);
+    border: 2.5px solid #1e242b;
+    box-shadow: 2px 3px 0px #1e242b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+}
+
+#joystickThumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #1d4ed8;
+    color: #ffffff;
+    border: 2px solid #1e242b;
+    box-shadow: 1px 2px 0px #1e242b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 900;
+    pointer-events: none;
+    will-change: transform;
+}
+
+/* 6. Landscape Orientation Recommendation Banner */
+#mobileOrientationGuide {
+    animation: fadeInSlide 0.4s ease-out;
+}
+
+@keyframes fadeInSlide {
+    from { opacity: 0; transform: translate(-50%, -10px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* 7. Night Theme Support for Mobile Components */
+body.night-theme #joystickBase {
+    background: rgba(18, 24, 33, 0.90) !important;
+    border-color: #38bdf8 !important;
+    box-shadow: 2px 3px 0px #05080c !important;
+    color: #38bdf8 !important;
+}
+
+body.night-theme #joystickThumb {
+    background: #0284c7 !important;
+    border-color: #38bdf8 !important;
+    box-shadow: 1px 2px 0px #05080c !important;
+}
+
+body.night-theme .mobile-floating-btn {
+    background: rgba(30, 41, 59, 0.94) !important;
+    border-color: #38bdf8 !important;
+    color: #f1f5f9 !important;
+    box-shadow: 1px 2px 0px #090d14 !important;
+}
+
+body.night-theme .mobile-mode-pill {
+    background: rgba(18, 24, 33, 0.96) !important;
+    border-color: #38bdf8 !important;
+}
+
+body.night-theme #mobileOrientationGuide {
+    background: rgba(15, 23, 42, 0.96) !important;
+    border-color: #38bdf8 !important;
+    color: #e2e8f0 !important;
+}
+
+/* 8. Mobile Scrollbar and Dialog Tuning */
+@media (max-width: 768px) {
+    .sketch-box {
+        box-shadow: 2px 3px 0px #1e242b;
+    }
+
+    #combatControlBar, #deploymentDock {
+        padding: 6px 8px !important;
+    }
+
+    .deploy-card-btn {
+        padding: 4px 8px !important;
+        font-size: 11px !important;
+    }
+
+    #tacticalToast {
+        font-size: 11px !important;
+        padding: 4px 10px !important;
+        max-width: 92% !important;
+    }
+}
+
+

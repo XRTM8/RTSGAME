@@ -2,7 +2,11 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1e242b">
     <title>كتيبة الحبر - معركة المشاة التكتيكية</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,87 +17,119 @@
     <!-- Custom Game Styles -->
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="relative flex flex-col w-full h-full overflow-hidden">
+<body class="relative flex flex-col w-full h-full overflow-hidden select-none touch-none">
 
     <!-- Top Tactical Bar -->
-    <header class="z-20 flex flex-wrap items-center justify-between gap-2 px-3 py-2 pointer-events-none sm:px-6 sm:py-3">
-        <!-- Allied Battalion Status -->
-        <div class="flex items-center gap-3 px-3 py-1.5 pointer-events-auto sketch-box">
-            <div class="flex items-center gap-2">
-                <span class="inline-block w-3.5 h-3.5 rounded-full bg-blue-700 border-2 border-slate-900"></span>
-                <div>
-                    <div class="text-[11px] font-bold text-slate-600 leading-none">كتيبتك (الحبر الأزرق)</div>
-                    <div class="flex items-center gap-2 mt-0.5">
-                        <span id="allyCountText" class="text-base font-black text-blue-800 sm:text-lg">12 / 12</span>
-                        <span class="text-xs font-semibold text-slate-600">جندي</span>
+    <header class="z-20 w-full px-2 py-1.5 sm:px-6 sm:py-3 pointer-events-none">
+        
+        <!-- MOBILE SLIM HEADER (Displayed on phones & small screens < 768px) -->
+        <div class="flex md:hidden items-center justify-between w-full px-2.5 py-1.5 pointer-events-auto sketch-box gap-1.5">
+            <!-- Right: Menu & Pause -->
+            <div class="flex items-center gap-1">
+                <button id="mobileHeaderMenuBtn" class="px-2.5 py-1 text-xs font-black sketch-btn active-blue" title="القائمة الرئيسية">☰</button>
+                <button id="mobileHeaderPauseBtn" class="px-2 py-1 text-xs font-black sketch-btn bg-amber-50" title="إيقاف مؤقت">⏸️</button>
+            </div>
+            
+            <!-- Center: Battle Live Status Pill -->
+            <div class="flex items-center gap-1.5 text-center">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-blue-700"></span>
+                <span id="mobileAllyCount" class="text-xs font-black text-blue-900">12</span>
+                <span class="text-[10px] font-bold text-slate-500">ضد</span>
+                <span id="mobileEnemyCount" class="text-xs font-black text-red-700">12</span>
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-700"></span>
+                <span class="w-px h-3.5 bg-slate-300 mx-0.5"></span>
+                <span id="mobileBattleTitle" class="text-[10px] font-extrabold text-slate-800 truncate max-w-[105px]">الخنادق الوسطى</span>
+            </div>
+
+            <!-- Left: Ink Points & Fullscreen -->
+            <div class="flex items-center gap-1">
+                <button id="mobileInkPointsBadge" class="px-2 py-1 text-[11px] font-black sketch-btn bg-amber-50 text-blue-900 flex items-center gap-1" title="مقر ترقيات الكتيبة">
+                    <span>🎖️</span><span id="mobileInkPoints">120</span>
+                </button>
+                <button id="headerFullscreenBtn" class="px-2 py-1 text-xs font-bold sketch-btn" title="ملء الشاشة">⛶</button>
+            </div>
+        </div>
+
+        <!-- DESKTOP COMPREHENSIVE HEADER (Displayed on md: screens and above) -->
+        <div class="hidden md:flex flex-wrap items-center justify-between gap-2 w-full">
+            <!-- Allied Battalion Status -->
+            <div class="flex items-center gap-3 px-3 py-1.5 pointer-events-auto sketch-box">
+                <div class="flex items-center gap-2">
+                    <span class="inline-block w-3.5 h-3.5 rounded-full bg-blue-700 border-2 border-slate-900"></span>
+                    <div>
+                        <div class="text-[11px] font-bold text-slate-600 leading-none">كتيبتك (الحبر الأزرق)</div>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span id="allyCountText" class="text-base font-black text-blue-800 sm:text-lg">12 / 12</span>
+                            <span class="text-xs font-semibold text-slate-600">جندي</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="w-px h-7 bg-slate-400/60"></div>
-            <div class="text-xs">
-                <div class="text-[10px] text-slate-500 font-bold">المحددين</div>
-                <div id="selectedCountText" class="font-extrabold text-slate-900">12</div>
-            </div>
-            <div class="w-px h-7 bg-slate-400/60"></div>
-            <button id="campaignModalBtn" class="flex items-center gap-1 px-2 py-1 text-xs font-black sketch-btn bg-amber-50 hover:bg-amber-100" title="مقر ترقيات الكتيبة ونقاط الحبر">
-                <span>🎖️</span>
-                <span id="headerInkPointsBadge" class="text-blue-900 font-black">120 حبر</span>
-            </button>
-        </div>
-
-        <!-- Center Battle Info, Main Menu & Fast Controls -->
-        <div class="flex items-center gap-1.5 px-3 py-1.5 pointer-events-auto sketch-box flex-wrap justify-center">
-            <!-- Main Menu Button (Prominent & Styled) -->
-            <button id="headerMenuBtn" class="px-3 py-1.5 text-xs font-black sketch-btn active-blue flex items-center gap-1.5 shadow-md" title="فتح القائمة التكتيكية الرئيسية (ESC)">
-                <span>☰</span>
-                <span>القائمة الرئيسية</span>
-            </button>
-
-            <div class="w-px h-6 bg-slate-400/60"></div>
-
-            <button id="prevMapBtn" class="px-2 py-1 text-xs font-bold sketch-btn" title="المعركة السابقة">◀</button>
-            <div class="text-center min-w-[125px] sm:min-w-[155px]">
-                <div id="battleTitle" class="text-xs font-black text-slate-900 sm:text-sm">معركة الخنادق الوسطى</div>
-                <div id="battleTimer" class="text-[11px] font-bold text-slate-600">الوضع: اشتباك تكتيكي حر</div>
-            </div>
-            <button id="nextMapBtn" class="px-2 py-1 text-xs font-bold sketch-btn" title="المعركة التالية">▶</button>
-            
-            <button id="pauseBtn" class="px-2.5 py-1 text-xs font-black sketch-btn bg-amber-50 hover:bg-amber-100 flex items-center gap-1" title="إيقاف مؤقت تكتيكي (مسافة Space)">
-                <span>⏸️</span> <span>إيقاف (Space)</span>
-            </button>
-            <div class="flex items-center gap-0.5 border border-slate-400/60 rounded p-0.5 bg-white/40">
-                <button data-speed="0.5" class="speed-btn px-1.5 py-0.5 text-[10px] font-bold sketch-btn" title="تصوير بطيء (0.5x)">0.5x</button>
-                <button data-speed="1.0" class="speed-btn px-1.5 py-0.5 text-[10px] font-bold sketch-btn active-blue" title="السرعة العادية (1x)">1x</button>
-                <button data-speed="2.0" class="speed-btn px-1.5 py-0.5 text-[10px] font-bold sketch-btn" title="سرعة مضاعفة (2x)">2x</button>
-            </div>
-            
-            <button id="restartBtn" class="px-2.5 py-1 text-xs font-bold sketch-btn bg-amber-50 hover:bg-amber-100" title="إعادة المعركة">
-                ↻ إعادة
-            </button>
-            <button id="themeToggleBtn" class="px-2.5 py-1 text-xs font-black sketch-btn bg-slate-100 hover:bg-slate-200 flex items-center gap-1" title="التبديل الفوري بين الوضع النهاري والليلي">
-                <span>🌙</span> <span id="themeToggleText">ليلي</span>
-            </button>
-            <button id="musicToggleBtn" class="px-2.5 py-1 text-xs font-bold sketch-btn" title="تشغيل / إيقاف طبول الحرب العسكرية">
-                🥁 طبول الحرب
-            </button>
-            <button id="soundToggleBtn" class="px-2.5 py-1 text-xs font-bold sketch-btn" title="المؤثرات الصوتية">
-                🔊
-            </button>
-            <button id="helpModalBtn" class="px-2.5 py-1 text-xs font-bold sketch-btn" title="دليل التحكم والتعليمات">
-                ؟ التحكم
-            </button>
-        </div>
-
-        <!-- Enemy Battalion Status -->
-        <div class="flex items-center gap-3 px-3 py-1.5 pointer-events-auto sketch-box">
-            <div class="text-left">
-                <div class="text-[11px] font-bold text-slate-600 leading-none">الكتيبة المعادية (الحبر الأحمر)</div>
-                <div class="flex items-center justify-end gap-2 mt-0.5">
-                    <span class="text-xs font-semibold text-slate-600">جندي</span>
-                    <span id="enemyCountText" class="text-base font-black text-red-700 sm:text-lg">12 / 12</span>
+                <div class="w-px h-7 bg-slate-400/60"></div>
+                <div class="text-xs">
+                    <div class="text-[10px] text-slate-500 font-bold">المحددين</div>
+                    <div id="selectedCountText" class="font-extrabold text-slate-900">12</div>
                 </div>
+                <div class="w-px h-7 bg-slate-400/60"></div>
+                <button id="campaignModalBtn" class="flex items-center gap-1 px-2 py-1 text-xs font-black sketch-btn bg-amber-50 hover:bg-amber-100" title="مقر ترقيات الكتيبة ونقاط الحبر">
+                    <span>🎖️</span>
+                    <span id="headerInkPointsBadge" class="text-blue-900 font-black">120 حبر</span>
+                </button>
             </div>
-            <span class="inline-block w-3.5 h-3.5 rounded-full bg-red-700 border-2 border-slate-900"></span>
+
+            <!-- Center Battle Info, Main Menu & Fast Controls -->
+            <div class="flex items-center gap-1.5 px-3 py-1.5 pointer-events-auto sketch-box flex-wrap justify-center">
+                <!-- Main Menu Button (Prominent & Styled) -->
+                <button id="headerMenuBtn" class="px-3 py-1.5 text-xs font-black sketch-btn active-blue flex items-center gap-1.5 shadow-md" title="فتح القائمة التكتيكية الرئيسية (ESC)">
+                    <span>☰</span>
+                    <span>القائمة الرئيسية</span>
+                </button>
+
+                <div class="w-px h-6 bg-slate-400/60"></div>
+
+                <button id="prevMapBtn" class="px-2 py-1 text-xs font-bold sketch-btn" title="المعركة السابقة">◀</button>
+                <div class="text-center min-w-[125px] sm:min-w-[155px]">
+                    <div id="battleTitle" class="text-xs font-black text-slate-900 sm:text-sm">معركة الخنادق الوسطى</div>
+                    <div id="battleTimer" class="text-[11px] font-bold text-slate-600">الوضع: اشتباك تكتيكي حر</div>
+                </div>
+                <button id="nextMapBtn" class="px-2 py-1 text-xs font-bold sketch-btn" title="المعركة التالية">▶</button>
+                
+                <button id="pauseBtn" class="px-2.5 py-1 text-xs font-black sketch-btn bg-amber-50 hover:bg-amber-100 flex items-center gap-1" title="إيقاف مؤقت تكتيكي (مسافة Space)">
+                    <span>⏸️</span> <span>إيقاف (Space)</span>
+                </button>
+                <div class="flex items-center gap-0.5 border border-slate-400/60 rounded p-0.5 bg-white/40">
+                    <button data-speed="0.5" class="speed-btn px-1.5 py-0.5 text-[10px] font-bold sketch-btn" title="تصوير بطيء (0.5x)">0.5x</button>
+                    <button data-speed="1.0" class="speed-btn px-1.5 py-0.5 text-[10px] font-bold sketch-btn active-blue" title="السرعة العادية (1x)">1x</button>
+                    <button data-speed="2.0" class="speed-btn px-1.5 py-0.5 text-[10px] font-bold sketch-btn" title="سرعة مضاعفة (2x)">2x</button>
+                </div>
+                
+                <button id="restartBtn" class="px-2.5 py-1 text-xs font-bold sketch-btn bg-amber-50 hover:bg-amber-100" title="إعادة المعركة">
+                    ↻ إعادة
+                </button>
+                <button id="themeToggleBtn" class="px-2.5 py-1 text-xs font-black sketch-btn bg-slate-100 hover:bg-slate-200 flex items-center gap-1" title="التبديل الفوري بين الوضع النهاري والليلي">
+                    <span>🌙</span> <span id="themeToggleText">ليلي</span>
+                </button>
+                <button id="musicToggleBtn" class="px-2.5 py-1 text-xs font-bold sketch-btn" title="تشغيل / إيقاف طبول الحرب العسكرية">
+                    🥁 طبول الحرب
+                </button>
+                <button id="soundToggleBtn" class="px-2.5 py-1 text-xs font-bold sketch-btn" title="المؤثرات الصوتية">
+                    🔊
+                </button>
+                <button id="helpModalBtn" class="px-2.5 py-1 text-xs font-bold sketch-btn" title="دليل التحكم والتعليمات">
+                    ؟ التحكم
+                </button>
+            </div>
+
+            <!-- Enemy Battalion Status -->
+            <div class="flex items-center gap-3 px-3 py-1.5 pointer-events-auto sketch-box">
+                <div class="text-left">
+                    <div class="text-[11px] font-bold text-slate-600 leading-none">الكتيبة المعادية (الحبر الأحمر)</div>
+                    <div class="flex items-center justify-end gap-2 mt-0.5">
+                        <span class="text-xs font-semibold text-slate-600">جندي</span>
+                        <span id="enemyCountText" class="text-base font-black text-red-700 sm:text-lg">12 / 12</span>
+                    </div>
+                </div>
+                <span class="inline-block w-3.5 h-3.5 rounded-full bg-red-700 border-2 border-slate-900"></span>
+            </div>
         </div>
     </header>
 
@@ -110,6 +146,36 @@
         <div id="tacticalPauseBanner" class="hidden absolute top-12 left-1/2 -translate-x-1/2 z-20 pointer-events-none px-4 py-1.5 sketch-box bg-amber-50/95 border-2 border-slate-900 shadow-xl flex items-center gap-2 text-slate-900 font-black text-xs sm:text-sm">
             <span>⏸️</span>
             <span>إيقاف تكتيكي مؤقت (PAUSED) • يمكنك دراسة الميدان وتغيير التشكيل وإصدار الأوامر بحرية (Space)</span>
+        </div>
+
+        <!-- Mobile Floating Tactical Camera Toolbar -->
+        <div id="mobileFloatingControls" class="mobile-floating-bar md:hidden">
+            <button id="mobileZoomInBtn" class="sketch-btn mobile-floating-btn" title="تكبير الميدان">+</button>
+            <button id="mobileZoomOutBtn" class="sketch-btn mobile-floating-btn" title="تصغير الميدان">−</button>
+            <button id="mobileRecenterBtn" class="sketch-btn mobile-floating-btn" title="إعادة تمركز الكاميرا">🎯</button>
+            <button id="mobileJoystickToggleBtn" class="sketch-btn mobile-floating-btn active-blue" title="عصا التحكم اللمسية">🕹️</button>
+            <button id="mobileFullscreenBtn" class="sketch-btn mobile-floating-btn" title="وضع ملء الشاشة">⛶</button>
+        </div>
+
+        <!-- Mobile Pointer Mode Floating Switcher Pill -->
+        <div id="mobileModeBar" class="mobile-mode-pill sketch-box md:hidden">
+            <button data-mobile-mode="command" class="mobile-mode-btn px-2 py-1 text-[10px] font-black sketch-btn active-blue" title="رسم خط انتشار مباشر">✏️ خط</button>
+            <button data-mobile-mode="select" class="mobile-mode-btn px-2 py-1 text-[10px] font-bold sketch-btn" title="تحديد متعدد للمشاة والمدرعات">⬚ تحديد</button>
+            <button data-mobile-mode="pan" class="mobile-mode-btn px-2 py-1 text-[10px] font-bold sketch-btn" title="تحريك واستكشاف الميدان">✋ تحريك</button>
+        </div>
+
+        <!-- Landscape Recommendation Banner for Portrait Phones -->
+        <div id="mobileOrientationGuide" class="hidden absolute top-14 left-1/2 -translate-x-1/2 z-30 pointer-events-auto sketch-box px-3 py-1.5 bg-[#fdfbf7]/98 border-2 border-slate-900 shadow-xl flex items-center gap-2 text-xs font-bold text-slate-800 max-w-[92%] text-center">
+            <span>📱🔄</span>
+            <span class="flex-1 text-[11px] leading-tight">للحصول على أوسع رؤية تكتيكية، جرب تدوير هاتفك بالوضع العرضي (Landscape)!</span>
+            <button id="dismissOrientationGuideBtn" class="px-2 py-0.5 text-[10px] font-black sketch-btn hover:bg-red-50">✕ فهمت</button>
+        </div>
+
+        <!-- Virtual Analog Touch Joystick for Direct Squad/Tank Steering -->
+        <div id="virtualJoystickContainer" class="hidden">
+            <div id="joystickBase">
+                <div id="joystickThumb">🕹️</div>
+            </div>
         </div>
 
         <!-- Deployment Unit Card Tooltip Popup -->
@@ -314,10 +380,35 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Mobile & Touch Controls Settings -->
+                    <div class="p-3 bg-white/85 rounded-lg border-2 border-slate-800 space-y-2.5">
+                        <div class="font-black text-slate-900 text-xs sm:text-sm">📱 إعدادات الهواتف واللمس التفاعلي:</div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button id="toggleHapticsSettingBtn" class="px-3 py-1.5 text-xs font-black sketch-btn active-blue">
+                                📳 الاهتزاز اللمسي: مفعل
+                            </button>
+                            <button id="toggleJoystickSettingBtn" class="px-3 py-1.5 text-xs font-black sketch-btn active-blue">
+                                🕹️ عصا التحكم: مفعلة
+                            </button>
+                            <button id="menuFullscreenBtn" class="px-3 py-1.5 text-xs font-black sketch-btn">
+                                ⛶ ملء الشاشة
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-slate-600">يمكنك استخدام إصبعين للتكبير والتصغير (Pinch-to-zoom) وتحريك الميدان بحرية، أو توجيه الكتيبة والمدرعات مباشرة عبر عصا التحكم الافتراضية.</p>
+                    </div>
                 </div>
 
                 <!-- TAB 3: FIELD MANUAL (دليل الميدان) -->
                 <div data-tab="guide" class="menu-tab-content space-y-3 hidden flex-1 text-xs sm:text-sm text-slate-800 font-semibold leading-relaxed">
+                    <div class="p-3 bg-white/85 rounded border border-slate-800">
+                        <div class="font-black text-blue-800 mb-1">📱 تحكم الهواتف الذكية واللمس الاحترافي (Mobile Touch):</div>
+                        • <b>التكبير والتصغير:</b> باعد أو قرّب بين إصبعين (Pinch-to-zoom) أو استخدم زري (+ / −) العائمين.<br>
+                        • <b>تحريك الميدان:</b> اسحب بإصبعين معاً، أو فعّل زر "✋ تحريك" العائم.<br>
+                        • <b>رسم خط الانتشار:</b> اسحب بإصبع واحد في أي اتجاه لتوجيه وتوزيع الجنود فوراً.<br>
+                        • <b>تركيز النيران السريع:</b> انقر نقرة واحدة على أي جندي أو دبابة معادية لتركيز كافة النيران عليه.<br>
+                        • <b>عصا التحكم التناظرية:</b> حرّك عصا التحكم (Joystick) لتوجيه فصائل المشاة والمدرعات للأمام والخلف وتفادي النيران.
+                    </div>
                     <div class="p-3 bg-white/85 rounded border border-slate-800">
                         <div class="font-black text-red-800 mb-1">🎯 تركيز النيران على هدف محدد (Focus Fire):</div>
                         انقر على أي عدو (جندي، دبابة، أو عش رشاش) بالزر الأيسر أو الأيمن لتوجه كافة بنادق ودبابات الكتيبة نحوه فوراً، واضغط <b>X</b> أو <b>Esc</b> لإلغاء التركيز.
@@ -327,8 +418,8 @@
                         يحتمي المشاة تلقائياً بالخنادق وأكياس الرمل عند الاقتراب منها، ويتحركون جانبياً بذكاء لإفساح خط النار وتجنب إطلاق الرصاص في ظهور زملائهم.
                     </div>
                     <div class="p-3 bg-white/85 rounded border border-slate-800">
-                        <div class="font-black text-blue-800 mb-1">1. رسم خط التشكيل (الزر الأيمن للماوس):</div>
-                        اسحب بالزر الأيمن لرسم خط حي على الورقة؛ سيتوزع الجنود والمدرعات عليه وفق أدوارهم التكتيكية ويوجهون بنادقهم للعدو فوراً.
+                        <div class="font-black text-blue-800 mb-1">1. رسم خط التشكيل (الزر الأيمن للماوس أو السحب باللمس):</div>
+                        اسحب بالزر الأيمن أو بإصبعك لرسم خط حي على الورقة؛ سيتوزع الجنود والمدرعات عليه وفق أدوارهم التكتيكية ويوجهون بنادقهم للعدو فوراً.
                     </div>
                     <div class="p-3 bg-white/85 rounded border border-slate-800">
                         <div class="font-black text-blue-800 mb-1">2. الأسلحة الثقيلة ومدرعات الحبر:</div>
@@ -336,7 +427,7 @@
                     </div>
                     <div class="p-3 bg-white/85 rounded border border-slate-800">
                         <div class="font-black text-blue-800 mb-1">3. الكاميرا والتحكم المباشر:</div>
-                        تحكم بالمشاة مباشرة عبر <b>WASD</b>، وكبّر وصغّر الميدان بـ <b>عجلة الماوس</b>، واسحب بـ <b>زر الماوس الأوسط</b>.
+                        تحكم بالمشاة مباشرة عبر <b>عصا التحكم اللمسية</b> أو مفاتيح <b>WASD</b>، وكبّر وصغّر الميدان بـ <b>عجلة الماوس</b> أو <b>اللمس بإصبعين</b>.
                     </div>
                 </div>
 
@@ -503,132 +594,146 @@
     </main>
 
     <!-- Bottom Tactical Control Panel & Deployment Dock -->
-    <footer id="tacticalFooter" class="z-20 px-2 py-2 sm:px-6 sm:py-3 pointer-events-none">
+    <footer id="tacticalFooter" class="z-20 px-2 py-1.5 sm:px-6 sm:py-3 pointer-events-none">
         
         <!-- PRE-BATTLE DEPLOYMENT DOCK (منطقة بطاقات انتشار وتشكيل الكتيبة) -->
-        <div id="deploymentDock" class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-3 pointer-events-auto sketch-box p-2 sm:p-2.5 bg-[#f7f3eb]/95 backdrop-blur-sm shadow-xl">
+        <div id="deploymentDock" class="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-3 pointer-events-auto sketch-box p-2 sm:p-2.5 bg-[#f7f3eb]/95 backdrop-blur-sm shadow-xl">
             <!-- Battalion Limit & Info -->
-            <div class="flex items-center gap-2.5 border-l-2 border-slate-300 pl-3">
-                <span class="text-2xl">🎖️</span>
-                <div>
-                    <div class="text-[11px] font-bold text-slate-500">حجم الكتيبة المنشورة</div>
-                    <div class="flex items-center gap-1.5">
-                        <span id="deployTotalCountBadge" class="text-base sm:text-lg font-black text-blue-800">0 / 12</span>
-                        <span class="text-[10px] font-bold text-slate-600">(الحد الأقصى)</span>
+            <div class="flex items-center justify-between md:justify-start gap-2.5 border-b md:border-b-0 md:border-l-2 border-slate-300 pb-1.5 md:pb-0 md:pl-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl sm:text-2xl">🎖️</span>
+                    <div>
+                        <div class="text-[10px] sm:text-[11px] font-bold text-slate-500">حجم الكتيبة المنشورة</div>
+                        <div class="flex items-center gap-1.5">
+                            <span id="deployTotalCountBadge" class="text-base sm:text-lg font-black text-blue-800">0 / 12</span>
+                            <span class="text-[9px] sm:text-[10px] font-bold text-slate-600">(الحد الأقصى)</span>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Mobile Fast Action Buttons right next to limit on phones -->
+                <div class="flex md:hidden items-center gap-1">
+                    <button id="mobileAutoDeployBtn" onclick="document.getElementById('autoDeployBtn').click()" class="px-2 py-1 text-[11px] font-black sketch-btn bg-amber-50">⚡ تلقائي</button>
+                    <button id="mobileClearDeployBtn" onclick="document.getElementById('clearDeployBtn').click()" class="px-2 py-1 text-[11px] font-bold sketch-btn text-red-700">✕</button>
                 </div>
             </div>
 
-            <!-- Unit Cards (بطاقات المشاة والمدرعات بنفس ستايل الـ HUD) -->
-            <div class="flex items-center gap-1.5 flex-wrap">
+            <!-- Unit Cards (2x2 grid on phones, flex on desktop) -->
+            <div class="grid grid-cols-2 sm:flex sm:items-center gap-1.5">
                 <!-- Rifleman Card -->
-                <button data-role="rifle" class="deploy-card-btn px-3 py-1.5 text-xs font-black sketch-btn active-blue flex items-center gap-2" title="جندي المشاة الأساسي المتوازن">
-                    <span class="w-2.5 h-2.5 rounded-full bg-blue-700"></span>
-                    <div class="text-right">
-                        <div>بندقية (مشاة)</div>
-                        <div class="text-[10px] font-bold text-slate-600">المتاح: <span id="deployCount_rifle">0 / 8</span></div>
+                <button data-role="rifle" class="deploy-card-btn px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs font-black sketch-btn active-blue flex items-center justify-between sm:justify-start gap-1.5" title="جندي المشاة الأساسي المتوازن">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-700"></span>
+                        <span class="text-xs">مشاة</span>
                     </div>
+                    <span class="text-[10px] font-bold bg-white/40 px-1 rounded"><span id="deployCount_rifle">0 / 8</span></span>
                 </button>
 
                 <!-- Assault Card -->
-                <button data-role="assault" class="deploy-card-btn px-3 py-1.5 text-xs font-black sketch-btn flex items-center gap-2" title="جندي رشاش سريع الاقتحام">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-600"></span>
-                    <div class="text-right">
-                        <div>رشاش (اقتحام)</div>
-                        <div class="text-[10px] font-bold text-slate-600">المتاح: <span id="deployCount_assault">0 / 6</span></div>
+                <button data-role="assault" class="deploy-card-btn px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs font-black sketch-btn flex items-center justify-between sm:justify-start gap-1.5" title="جندي رشاش سريع الاقتحام">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-600"></span>
+                        <span class="text-xs">اقتحام</span>
                     </div>
+                    <span class="text-[10px] font-bold bg-white/40 px-1 rounded"><span id="deployCount_assault">0 / 6</span></span>
                 </button>
 
                 <!-- Sniper Card -->
-                <button data-role="sniper" class="deploy-card-btn px-3 py-1.5 text-xs font-black sketch-btn flex items-center gap-2" title="قناص طويل المدى عالي الضرر">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
-                    <div class="text-right">
-                        <div>قناص (إسناد)</div>
-                        <div class="text-[10px] font-bold text-slate-600">المتاح: <span id="deployCount_sniper">0 / 3</span></div>
+                <button data-role="sniper" class="deploy-card-btn px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs font-black sketch-btn flex items-center justify-between sm:justify-start gap-1.5" title="قناص طويل المدى عالي الضرر">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+                        <span class="text-xs">قناص</span>
                     </div>
+                    <span class="text-[10px] font-bold bg-white/40 px-1 rounded"><span id="deployCount_sniper">0 / 3</span></span>
                 </button>
 
                 <!-- Light Tank Card -->
-                <button data-role="tank" class="deploy-card-btn px-3 py-1.5 text-xs font-black sketch-btn bg-slate-100 flex items-center gap-2" title="مدرعة حبر خفيفة ذات مدفع مدمر وسحق للسواتر">
-                    <span>🛡️</span>
-                    <div class="text-right">
-                        <div>مدرعة حبر</div>
-                        <div class="text-[10px] font-bold text-slate-600">المتاح: <span id="deployCount_tank">0 / 1</span></div>
+                <button data-role="tank" class="deploy-card-btn px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs font-black sketch-btn bg-slate-100 flex items-center justify-between sm:justify-start gap-1.5" title="مدرعة حبر خفيفة ذات مدفع مدمر وسحق للسواتر">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs">🛡️</span>
+                        <span class="text-xs">مدرعة</span>
                     </div>
+                    <span class="text-[10px] font-bold bg-white/40 px-1 rounded"><span id="deployCount_tank">0 / 1</span></span>
                 </button>
             </div>
 
             <!-- Fast Deployment & Engage Buttons -->
-            <div class="flex items-center gap-2">
-                <button id="autoDeployBtn" class="px-3 py-2 text-xs font-black sketch-btn bg-amber-50 hover:bg-amber-100 flex items-center gap-1.5" title="نشر تشكيل تكتيكي متوازن تلقائياً">
+            <div class="flex items-center gap-2 w-full md:w-auto">
+                <button id="autoDeployBtn" class="hidden md:flex px-3 py-2 text-xs font-black sketch-btn bg-amber-50 hover:bg-amber-100 items-center gap-1.5" title="نشر تشكيل تكتيكي متوازن تلقائياً">
                     <span>⚡</span> <span>انتشار تلقائي</span>
                 </button>
-                <button id="clearDeployBtn" class="px-2.5 py-2 text-xs font-bold sketch-btn hover:bg-red-50 text-red-700" title="مسح تشكيل الكتيبة وإعادة التوزيع">
+                <button id="clearDeployBtn" class="hidden md:flex px-2.5 py-2 text-xs font-bold sketch-btn hover:bg-red-50 text-red-700" title="مسح تشكيل الكتيبة وإعادة التوزيع">
                     ✕ مسح
                 </button>
-                <button id="engageBattleBtn" class="px-5 py-2 text-xs sm:text-sm font-black sketch-btn bg-blue-700 text-white hover:bg-blue-800 flex items-center gap-2 shadow-lg border-2 border-slate-900" title="إطلاق صافرة المعركة وبدء القتال الفوري">
+                <button id="engageBattleBtn" class="w-full md:w-auto justify-center px-5 py-2 text-xs sm:text-sm font-black sketch-btn bg-blue-700 text-white hover:bg-blue-800 flex items-center gap-2 shadow-lg border-2 border-slate-900" title="إطلاق صافرة المعركة وبدء القتال الفوري">
                     <span>⚔️</span> <span>بدء المعركة (ENGAGE)</span>
                 </button>
             </div>
         </div>
 
         <!-- COMBAT CONTROL BAR (شريط التحكم أثناء سير المعركة) -->
-        <div id="combatControlBar" class="hidden max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2 pointer-events-auto sketch-box p-2 sm:p-2.5">
+        <div id="combatControlBar" class="hidden max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-1.5 sm:gap-2 pointer-events-auto sketch-box p-1.5 sm:p-2.5">
             
-            <!-- Pointer Mode Switcher -->
-            <div class="flex items-center gap-1.5 border-l-2 border-slate-300 pl-2">
-                <button id="modeSelectBtn" class="px-2.5 py-1.5 text-xs font-black sketch-btn active-blue flex items-center gap-1" title="الزر الأيسر يحدد الجنود، والأيمن يحركهم">
-                    <span>⬚</span> <span>تحديد</span>
-                </button>
-                <button id="modeCommandBtn" class="px-2.5 py-1.5 text-xs font-black sketch-btn flex items-center gap-1" title="السحب يرسم خط تحرك وانتشار مباشر للجنود">
-                    <span>✎</span> <span>رسم خط تحرك</span>
-                </button>
+            <!-- Mobile Row 1: Tactical Abilities & Stances -->
+            <div class="flex items-center justify-between sm:justify-start gap-1.5 w-full md:w-auto flex-wrap">
+                <!-- Tactical Abilities -->
+                <div class="flex items-center gap-1">
+                    <button id="abilityFragBtn" class="px-2 sm:px-2.5 py-1.5 text-xs font-black sketch-btn bg-red-50 hover:bg-red-100 flex items-center gap-1" title="إلقاء قنبلة يدوية على موقع المؤشر (G)">
+                        <span>💣</span>
+                        <span id="fragCountBadge" class="px-1 py-0.2 bg-slate-900 text-white rounded text-[10px]">3</span>
+                    </button>
+                    <button id="abilitySmokeBtn" class="px-2 sm:px-2.5 py-1.5 text-xs font-black sketch-btn bg-slate-100 hover:bg-slate-200 flex items-center gap-1" title="إطلاق قنبلة دخانية للتغطية وإنعاش المعنويات (F)">
+                        <span>💨</span>
+                        <span id="smokeCountBadge" class="px-1 py-0.2 bg-slate-900 text-white rounded text-[10px]">2</span>
+                    </button>
+                    <button id="abilityHealBtn" class="px-2 sm:px-2.5 py-1.5 text-xs font-black sketch-btn bg-emerald-50 hover:bg-emerald-100 flex items-center gap-1" title="ضمادات وإسعاف للجنود المحددين (E)">
+                        <span>➕</span>
+                        <span id="healCountBadge" class="px-1 py-0.2 bg-slate-900 text-white rounded text-[10px]">2</span>
+                    </button>
+                </div>
+
+                <div class="w-px h-6 bg-slate-300"></div>
+
+                <!-- Stance & Orders -->
+                <div class="flex items-center gap-1">
+                    <button id="stanceHoldBtn" class="px-2 sm:px-2.5 py-1.5 text-[11px] sm:text-xs font-bold sketch-btn" title="ثبات في الموقع مع دقة تصويب أعلى (H)">
+                        🛡️ ثبات
+                    </button>
+                    <button id="stanceChargeBtn" class="px-2 sm:px-2.5 py-1.5 text-[11px] sm:text-xs font-bold sketch-btn" title="هجوم واقتحام سريع نحو أقرب عدو (C)">
+                        ⚔️ اقتحام
+                    </button>
+                    <button id="stanceRetreatBtn" class="px-2 sm:px-2.5 py-1.5 text-[11px] sm:text-xs font-bold sketch-btn" title="تراجع تكتيكي مع استمرار الرماية">
+                        ↩ تراجع
+                    </button>
+                </div>
             </div>
 
-            <!-- Squad Selection Buttons -->
-            <div class="flex items-center gap-1 border-l-2 border-slate-300 pl-2">
-                <span class="hidden md:inline text-[11px] font-bold text-slate-500 ml-1">الفصائل:</span>
-                <button data-squad="all" class="squad-btn px-2.5 py-1.5 text-xs font-bold sketch-btn active">الكل (1)</button>
-                <button data-squad="alpha" class="squad-btn px-2.5 py-1.5 text-xs font-bold sketch-btn">اقتحام أ (2)</button>
-                <button data-squad="bravo" class="squad-btn px-2.5 py-1.5 text-xs font-bold sketch-btn">إسناد ب (3)</button>
-            </div>
+            <!-- Mobile Row 2 / Desktop Controls: Pointer Mode, Squads, Formations -->
+            <div class="flex items-center justify-between sm:justify-end gap-1.5 w-full md:w-auto overflow-x-auto pb-0.5 md:pb-0">
+                <!-- Pointer Mode Switcher (Desktop view) -->
+                <div class="hidden sm:flex items-center gap-1 border-l-2 border-slate-300 pl-2">
+                    <button id="modeSelectBtn" class="px-2.5 py-1.5 text-xs font-black sketch-btn active-blue flex items-center gap-1" title="الزر الأيسر يحدد الجنود، والأيمن يحركهم">
+                        <span>⬚</span> <span>تحديد</span>
+                    </button>
+                    <button id="modeCommandBtn" class="px-2.5 py-1.5 text-xs font-black sketch-btn flex items-center gap-1" title="السحب يرسم خط تحرك وانتشار مباشر للجنود">
+                        <span>✎</span> <span>رسم خط</span>
+                    </button>
+                </div>
 
-            <!-- Formation Buttons -->
-            <div class="flex items-center gap-1 border-l-2 border-slate-300 pl-2">
-                <span class="hidden lg:inline text-[11px] font-bold text-slate-500 ml-1">التشكيل:</span>
-                <button data-formation="line" class="formation-btn px-2.5 py-1.5 text-xs font-bold sketch-btn active-blue" title="تشكيل خطي لإطلاق النار الكثيف">══ خطي</button>
-                <button data-formation="wedge" class="formation-btn px-2.5 py-1.5 text-xs font-bold sketch-btn" title="تشكيل رأس حربة للاختراق">▲ حربة</button>
-                <button data-formation="loose" class="formation-btn px-2.5 py-1.5 text-xs font-bold sketch-btn" title="انتشار متباعد لتجنب القنابل">∴ متفرق</button>
-                <button data-formation="arc" class="formation-btn px-2.5 py-1.5 text-xs font-bold sketch-btn" title="قوس إحاطة وتطويق">◡ قوس</button>
-            </div>
+                <!-- Squad Selection Buttons -->
+                <div class="flex items-center gap-1 border-l-2 border-slate-300 pl-1.5 sm:pl-2">
+                    <button data-squad="all" class="squad-btn px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-bold sketch-btn active">الكل</button>
+                    <button data-squad="alpha" class="squad-btn px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-bold sketch-btn">أ (اقتحام)</button>
+                    <button data-squad="bravo" class="squad-btn px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-bold sketch-btn">ب (إسناد)</button>
+                </div>
 
-            <!-- Stance & Orders -->
-            <div class="flex items-center gap-1 border-l-2 border-slate-300 pl-2">
-                <button id="stanceHoldBtn" class="px-2.5 py-1.5 text-xs font-bold sketch-btn" title="ثبات في الموقع مع دقة تصويب أعلى (H)">
-                    🛡️ ثبات (H)
-                </button>
-                <button id="stanceChargeBtn" class="px-2.5 py-1.5 text-xs font-bold sketch-btn" title="هجوم واقتحام سريع نحو أقرب عدو (C)">
-                    ⚔️ اقتحام (C)
-                </button>
-                <button id="stanceRetreatBtn" class="px-2.5 py-1.5 text-xs font-bold sketch-btn" title="تراجع تكتيكي مع استمرار الرماية">
-                    ↩ تراجع
-                </button>
-            </div>
-
-            <!-- Tactical Abilities -->
-            <div class="flex items-center gap-1.5">
-                <button id="abilityFragBtn" class="px-2.5 py-1.5 text-xs font-black sketch-btn bg-red-50 hover:bg-red-100 flex items-center gap-1" title="إلقاء قنبلة يدوية على موقع المؤشر (G)">
-                    <span>💣 قنبلة (G)</span>
-                    <span id="fragCountBadge" class="px-1.5 py-0.2 bg-slate-900 text-white rounded text-[10px]">3</span>
-                </button>
-                <button id="abilitySmokeBtn" class="px-2.5 py-1.5 text-xs font-black sketch-btn bg-slate-100 hover:bg-slate-200 flex items-center gap-1" title="إطلاق قنبلة دخانية للتغطية وإنعاش المعنويات (F)">
-                    <span>💨 دخان (F)</span>
-                    <span id="smokeCountBadge" class="px-1.5 py-0.2 bg-slate-900 text-white rounded text-[10px]">2</span>
-                </button>
-                <button id="abilityHealBtn" class="px-2.5 py-1.5 text-xs font-black sketch-btn bg-emerald-50 hover:bg-emerald-100 flex items-center gap-1" title="ضمادات وإسعاف للجنود المحددين (E)">
-                    <span>➕ إسعاف (E)</span>
-                    <span id="healCountBadge" class="px-1.5 py-0.2 bg-slate-900 text-white rounded text-[10px]">2</span>
-                </button>
+                <!-- Formation Buttons -->
+                <div class="flex items-center gap-1">
+                    <button data-formation="line" class="formation-btn px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-bold sketch-btn active-blue" title="تشكيل خطي">══ خطي</button>
+                    <button data-formation="wedge" class="formation-btn px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-bold sketch-btn" title="تشكيل رأس حربة">▲ حربة</button>
+                    <button data-formation="loose" class="formation-btn px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-bold sketch-btn" title="انتشار متباعد">∴ متفرق</button>
+                    <button data-formation="arc" class="formation-btn px-2 sm:px-2.5 py-1 text-[11px] sm:text-xs font-bold sketch-btn" title="قوس إحاطة">◡ قوس</button>
+                </div>
             </div>
         </div>
     </footer>
@@ -649,6 +754,7 @@
     <script src="js/endless.js"></script>
     <script src="js/deployment.js"></script>
     <script src="js/input.js"></script>
+    <script src="js/mobile.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/menu.js"></script>
     <script src="js/game.js"></script>

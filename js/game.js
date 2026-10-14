@@ -73,6 +73,9 @@ class BattalionGame {
             this.menu = new MenuManager();
             this.menu.init(this);
         }
+        if (window.MobileSystem) {
+            MobileSystem.init(this);
+        }
         this.loadScenario(this.scenarioIndex);
     }
 
@@ -86,8 +89,14 @@ class BattalionGame {
             btn.innerHTML = this.isPaused ? '<span>▶</span> <span>استئناف</span>' : '<span>⏸️</span> <span>إيقاف (Space)</span>';
             btn.classList.toggle('active-blue', this.isPaused);
         }
+        const mobilePauseBtn = document.getElementById('mobileHeaderPauseBtn');
+        if (mobilePauseBtn) {
+            mobilePauseBtn.innerHTML = this.isPaused ? '▶' : '⏸️';
+            mobilePauseBtn.classList.toggle('active-blue', this.isPaused);
+        }
         this.showToast(this.isPaused ? '⏸️ إيقاف تكتيكي مؤقت: يمكنك دراسة الميدان وتغيير التشكيل وإصدار الأوامر' : '▶ تم استئناف المعركة');
         if (window.sound) window.sound.playClick();
+        if (window.MobileHaptics) window.MobileHaptics.trigger('medium');
     }
 
     setGameSpeed(speed) {
@@ -123,6 +132,9 @@ class BattalionGame {
             if (this.menu.settings.screenShake === 'light') amount *= 0.5;
         }
         this.camera.triggerShake(amount);
+        if (window.MobileHaptics && amount >= 5) {
+            window.MobileHaptics.trigger('explosion');
+        }
     }
 
     resize() {
@@ -148,9 +160,11 @@ class BattalionGame {
 
         const titleEl = document.getElementById('battleTitle');
         const timerEl = document.getElementById('battleTimer');
+        const mobileTitleEl = document.getElementById('mobileBattleTitle');
         const modalEl = document.getElementById('endGameModal');
 
         if (titleEl) titleEl.textContent = scen.name;
+        if (mobileTitleEl) mobileTitleEl.textContent = scen.name;
         if (timerEl) timerEl.textContent = scen.subtitle;
         if (modalEl) modalEl.classList.add('hidden');
 
