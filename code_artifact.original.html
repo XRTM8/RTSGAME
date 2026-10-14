@@ -1,0 +1,2306 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>كتيبة الحبر - معركة المشاة التكتيكية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --paper-bg: #f4efe6;
+            --ink-dark: #1e242b;
+            --ink-blue: #1d4ed8;
+            --ink-red: #b91c1c;
+            --ink-pencil: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #e5dec9;
+            color: var(--ink-dark);
+        }
+
+        /* Hand-drawn sketchy border effect */
+        .sketch-box {
+            background: rgba(247, 243, 232, 0.94);
+            border: 2.5px solid #1e242b;
+            border-radius: 8px 14px 10px 12px / 12px 8px 14px 10px;
+            box-shadow: 3px 4px 0px #1e242b;
+            transition: all 0.15s ease;
+        }
+
+        .sketch-btn {
+            background: #fdfbf7;
+            border: 2px solid #1e242b;
+            border-radius: 10px 6px 12px 8px / 6px 12px 8px 10px;
+            box-shadow: 2px 3px 0px #1e242b;
+            transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease;
+            cursor: pointer;
+        }
+
+        .sketch-btn:hover {
+            background: #f1ece1;
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 4px 0px #1e242b;
+        }
+
+        .sketch-btn:active, .sketch-btn.active {
+            transform: translate(1px, 2px);
+            box-shadow: 0px 1px 0px #1e242b;
+            background: #1e242b;
+            color: #fdfbf7;
+        }
+
+        .sketch-btn.active-blue {
+            background: #1d4ed8;
+            color: #ffffff;
+            border-color: #1e242b;
+            transform: translate(1px, 1px);
+            box-shadow: 1px 2px 0px #1e242b;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        /* Custom subtle animation for active tactical badge */
+        @keyframes pulse-ink {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+
+        .ink-pulse {
+            animation: pulse-ink 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="relative flex flex-col w-full h-full overflow-hidden">
+
+    <!-- Top Tactical Bar -->
+    <header class="z-20 flex flex-wrap items-center justify-between gap-2 px-3 py-2 pointer-events-none sm:px-6 sm:py-3">
+        <!-- Allied Battalion Status -->
+        <div class="flex items-center gap-3 px-3 py-1.5 pointer-events-auto sketch-box">
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-3.5 h-3.5 rounded-full bg-blue-700 border-2 border-slate-900"></span>
+                <div>
+                    <div class="text-[11px] font-bold text-slate-600 leading-none">كتيبتك (الحبر الأزرق)</div>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <span id="allyCountText" class="text-base font-black text-blue-800 sm:text-lg">12 / 12</span>
+                        <span class="text-xs font-semibold text-slate-600">جندي</span>
+                    </div>
+                </div>
+            </div>
+            <div class="w-px h-7 bg-slate-400/60"></div>
+            <div class="text-xs">
+                <div class="text-[10px] text-slate-500 font-bold">المحددين</div>
+                <div id="selectedCountText" class="font-extrabold text-slate-900">12</div>
+            </div>
+        </div>
+
+        <!-- Center Battle Info & Wave/Scenario Selector -->
+        <div class="flex items-center gap-2 px-3 py-1.5 pointer-events-auto sketch-box">
+            <button id="prevMapBtn" class="px-2 py-1 text-xs font-bold sketch-btn" title="المعركة السابقة">◀</button>
+            <div class="text-center min-w-[125px] sm:min-w-[160px]">
+                <div id="battleTitle" class="text-xs font-black text-slate-900 sm:text-sm">معركة الخنادق الوسطى</div>
+                <div id="battleTimer" class="text-[11px] font-bold text-slate-600">الوضع: اشتباك تكتيكي حر</div>
+            </div>
+            <button id="nextMapBtn" class="px-2 py-1 text-xs font-bold sketch-btn" title="المعركة التالية">▶</button>
+            <button id="restartBtn" class="px-2.5 py-1 text-xs font-bold sketch-btn bg-amber-50 hover:bg-amber-100" title="إعادة المعركة">
+                ↻ إعادة
+            </button>
+            <button id="helpModalBtn" class="px-2.5 py-1 text-xs font-bold sketch-btn" title="دليل التحكم">
+                ؟ التحكم
+            </button>
+            <button id="soundToggleBtn" class="px-2.5 py-1 text-xs font-bold sketch-btn" title="الصوت">
+                🔊
+            </button>
+        </div>
+
+        <!-- Enemy Battalion Status -->
+        <div class="flex items-center gap-3 px-3 py-1.5 pointer-events-auto sketch-box">
+            <div class="text-left">
+                <div class="text-[11px] font-bold text-slate-600 leading-none">الكتيبة المعادية (الحبر الأحمر)</div>
+                <div class="flex items-center justify-end gap-2 mt-0.5">
+                    <span class="text-xs font-semibold text-slate-600">جندي</span>
+                    <span id="enemyCountText" class="text-base font-black text-red-700 sm:text-lg">12 / 12</span>
+                </div>
+            </div>
+            <span class="inline-block w-3.5 h-3.5 rounded-full bg-red-700 border-2 border-slate-900"></span>
+        </div>
+    </header>
+
+    <!-- Main Game Canvas Area -->
+    <main class="relative flex-1 w-full h-full overflow-hidden">
+        <canvas id="battleCanvas"></canvas>
+
+        <!-- Dynamic Tactical Hint Banner -->
+        <div id="tacticalToast" class="absolute top-2 left-1/2 -translate-x-1/2 z-10 pointer-events-none px-4 py-1.5 sketch-box text-xs sm:text-sm font-bold text-slate-800 transition-opacity duration-300 opacity-90 text-center">
+            اسحب بالزر الأيمن (أو وضع التوجيه) لرسم خط انتشار الكتيبة واتجاه البنادق • أو تحرك بـ WASD
+        </div>
+
+        <!-- Victory / Defeat Modal Overlay -->
+        <div id="endGameModal" class="hidden absolute inset-0 z-30 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] p-4">
+            <div class="max-w-md w-full p-6 text-center sketch-box ink-pulse">
+                <div id="endGameBadge" class="inline-block px-3 py-1 mb-2 text-xs font-black text-white bg-blue-700 rounded-md border-2 border-slate-900">
+                    انتصار تكتيكي
+                </div>
+                <h2 id="endGameTitle" class="text-2xl font-black text-slate-900 sm:text-3xl mb-2">حسمت الكتيبة المعركة!</h2>
+                <p id="endGameDesc" class="text-sm font-semibold text-slate-700 mb-5">
+                    تمكنت كتيبتك من السيطرة على الميدان وتحييد القوة المعادية ببراعة.
+                </p>
+                <div class="grid grid-cols-3 gap-2 mb-5 p-3 bg-amber-50/70 rounded-lg border-2 border-slate-800 text-xs font-bold">
+                    <div>
+                        <div class="text-slate-500">الناجون</div>
+                        <div id="statSurvivors" class="text-base font-black text-blue-800">9</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-500">دقة الإصابة</div>
+                        <div id="statAccuracy" class="text-base font-black text-slate-900">34%</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-500">الوقت</div>
+                        <div id="statTime" class="text-base font-black text-slate-900">48ث</div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-center gap-3">
+                    <button id="modalRestartBtn" class="px-5 py-2.5 text-sm font-black sketch-btn bg-amber-100">
+                        ↻ خوض المعركة مجدداً
+                    </button>
+                    <button id="modalNextBattleBtn" class="px-5 py-2.5 text-sm font-black sketch-btn active-blue">
+                        الميدان التالي ◀
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls & Guide Modal -->
+        <div id="helpModal" class="hidden absolute inset-0 z-30 flex items-center justify-center bg-slate-900/45 backdrop-blur-[2px] p-4">
+            <div class="max-w-lg w-full p-5 sm:p-6 sketch-box max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between border-b-2 border-slate-800 pb-2 mb-4">
+                    <h3 class="text-lg sm:text-xl font-black text-slate-900">📋 دليل القيادة والتحكم المثالي</h3>
+                    <button id="closeHelpBtn" class="px-2.5 py-0.5 text-sm font-black sketch-btn">✕</button>
+                </div>
+                <div class="space-y-3 text-xs sm:text-sm leading-relaxed text-slate-800 font-semibold">
+                    <div class="p-2.5 bg-white/80 rounded border border-slate-800">
+                        <div class="font-black text-blue-800 mb-1">1. رسم خط التشكيل والتوجيه (أقوى أداة تكتيكية):</div>
+                        اسحب بـ <b>الزر الأيمن للماوس</b> (أو فعّل زر <b>"أمر تحرك/خط"</b> بالأسفل واسحب بالماوس أو الإصبع) لترسم خطاً حياً على الورقة؛ سيتوزع الجنود فوراً على طول الخط الذي رسمته ويوجهون أكتافهم وبنادقهم نحو العدو!
+                    </div>
+                    <div class="p-2.5 bg-white/80 rounded border border-slate-800">
+                        <div class="font-black text-blue-800 mb-1">2. التحديد الذكي وتقسيم الفصائل:</div>
+                        اسحب بالزر الأيسر لتحديد مجموعة جنود داخل إطار، أو استخدم أزرار الفصائل السريعة بالأسفل (<b>الكل [1]</b>، <b>فصيلة الاقتحام [2]</b>، <b>فصيلة الإسناد والقناصة [3]</b>).
+                    </div>
+                    <div class="p-2.5 bg-white/80 rounded border border-slate-800">
+                        <div class="font-black text-blue-800 mb-1">3. التحكم الحركي المباشر (WASD / الأسهم):</div>
+                        يمكنك في أي لحظة تحريك الجنود المحددين مباشرة باستخدام مفاتيح <b>WASD</b> أو <b>الأسهم</b> مع توجيه نيرانهم نحو مؤشر الماوس!
+                    </div>
+                    <div class="p-2.5 bg-white/80 rounded border border-slate-800">
+                        <div class="font-black text-blue-800 mb-1">4. التغطية، الخنادق، والقدرات:</div>
+                        الجنود خلف <b>أكياس الرمل</b> أو داخل <b>الخنادق المرسومة</b> يكتسبون درع تغطية يقلل إصاباتهم بشكل كبير. استخدم <b>القنبلة اليدوية (G)</b> لكسر تحصينات العدو و<b>الستار الدخاني (F)</b> للتقدم الآمن.
+                    </div>
+                </div>
+                <div class="mt-5 text-center">
+                    <button id="gotItHelpBtn" class="px-6 py-2 text-sm font-black sketch-btn active-blue">فهمت، إلى الميدان!</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Tactical Control Panel -->
+    <footer class="z-20 px-2 py-2 sm:px-6 sm:py-3 pointer-events-none">
+        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2 pointer-events-auto sketch-box p-2 sm:p-2.5">
+            
+            <!-- Pointer Mode Switcher (Crucial for Touch & Single-Button Mouse users) -->
+            <div class="flex items-center gap-1.5 border-l-2 border-slate-300 pl-2">
+                <button id="modeSelectBtn" class="px-2.5 py-1.5 text-xs font-black sketch-btn active-blue flex items-center gap-1" title="الزر الأيسر يحدد الجنود، والأيمن يحركهم">
+                    <span>⬚</span> <span>تحديد</span>
+                </button>
+                <button id="modeCommandBtn" class="px-2.5 py-1.5 text-xs font-black sketch-btn flex items-center gap-1" title="السحب يرسم خط تحرك وانتشار مباشر للجنود">
+                    <span>✎</span> <span>رسم خط تحرك</span>
+                </button>
+            </div>
+
+            <!-- Squad Selection Buttons -->
+            <div class="flex items-center gap-1 border-l-2 border-slate-300 pl-2">
+                <span class="hidden md:inline text-[11px] font-bold text-slate-500 ml-1">الفصائل:</span>
+                <button data-squad="all" class="squad-btn px-2.5 py-1.5 text-xs font-bold sketch-btn active">الكل (1)</button>
+                <button data-squad="alpha" class="squad-btn px-2.5 py-1.5 text-xs font-bold sketch-btn">اقتحام أ (2)</button>
+                <button data-squad="bravo" class="squad-btn px-2.5 py-1.5 text-xs font-bold sketch-btn">إسناد ب (3)</button>
+            </div>
+
+            <!-- Formation Buttons -->
+            <div class="flex items-center gap-1 border-l-2 border-slate-300 pl-2">
+                <span class="hidden lg:inline text-[11px] font-bold text-slate-500 ml-1">التشكيل:</span>
+                <button data-formation="line" class="formation-btn px-2.5 py-1.5 text-xs font-bold sketch-btn active-blue" title="تشكيل خطي لإطلاق النار الكثيف">══ خطي</button>
+                <button data-formation="wedge" class="formation-btn px-2.5 py-1.5 text-xs font-bold sketch-btn" title="تشكيل رأس حربة للاختراق">▲ حربة</button>
+                <button data-formation="loose" class="formation-btn px-2.5 py-1.5 text-xs font-bold sketch-btn" title="انتشار متباعد لتجنب القنابل">∴ متفرق</button>
+                <button data-formation="arc" class="formation-btn px-2.5 py-1.5 text-xs font-bold sketch-btn" title="قوس إحاطة وتطويق">◡ قوس</button>
+            </div>
+
+            <!-- Stance & Orders -->
+            <div class="flex items-center gap-1 border-l-2 border-slate-300 pl-2">
+                <button id="stanceHoldBtn" class="px-2.5 py-1.5 text-xs font-bold sketch-btn" title="ثبات في الموقع مع دقة تصويب أعلى (H)">
+                    🛡️ ثبات (H)
+                </button>
+                <button id="stanceChargeBtn" class="px-2.5 py-1.5 text-xs font-bold sketch-btn" title="هجوم واقتحام سريع نحو أقرب عدو (C)">
+                    ⚔️ اقتحام (C)
+                </button>
+                <button id="stanceRetreatBtn" class="px-2.5 py-1.5 text-xs font-bold sketch-btn" title="تراجع تكتيكي مع استمرار الرماية">
+                    ↩ تراجع
+                </button>
+            </div>
+
+            <!-- Tactical Abilities -->
+            <div class="flex items-center gap-1.5">
+                <button id="abilityFragBtn" class="px-2.5 py-1.5 text-xs font-black sketch-btn bg-red-50 hover:bg-red-100 flex items-center gap-1" title="إلقاء قنبلة يدوية على موقع المؤشر (G)">
+                    <span>💣 قنبلة (G)</span>
+                    <span id="fragCountBadge" class="px-1.5 py-0.2 bg-slate-900 text-white rounded text-[10px]">3</span>
+                </button>
+                <button id="abilitySmokeBtn" class="px-2.5 py-1.5 text-xs font-black sketch-btn bg-slate-100 hover:bg-slate-200 flex items-center gap-1" title="إطلاق قنبلة دخانية للتغطية (F)">
+                    <span>💨 دخان (F)</span>
+                    <span id="smokeCountBadge" class="px-1.5 py-0.2 bg-slate-900 text-white rounded text-[10px]">2</span>
+                </button>
+                <button id="abilityHealBtn" class="px-2.5 py-1.5 text-xs font-black sketch-btn bg-emerald-50 hover:bg-emerald-100 flex items-center gap-1" title="ضمادات وإسعاف للجنود المحددين (E)">
+                    <span>➕ إسعاف (E)</span>
+                    <span id="healCountBadge" class="px-1.5 py-0.2 bg-slate-900 text-white rounded text-[10px]">2</span>
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        /**
+         * ============================================================================
+         * 1. PROCEDURAL SOUND ENGINE (WEB AUDIO API)
+         * Generates crisp, minimalist gunshot snaps, explosions, whistle, and ink clicks
+         * ============================================================================
+         */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) {
+                        this.ctx = new AudioCtx();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playClick() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(520, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(180, this.ctx.currentTime + 0.045);
+                    gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.045);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.05);
+                } catch (e) {}
+            }
+
+            playShot(weaponType = 'rifle') {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    // Noise burst for gunshot crack
+                    const bufferSize = this.ctx.sampleRate * 0.07;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.28));
+                    }
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.value = weaponType === 'sniper' ? 900 : (weaponType === 'smg' ? 1600 : 1200);
+
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(weaponType === 'sniper' ? 0.16 : 0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.005, now + 0.07);
+
+                    noise.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    noise.start(now);
+                } catch (e) {}
+            }
+
+            playExplosion() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const bufferSize = this.ctx.sampleRate * 0.45;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.35));
+                    }
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(360, now);
+                    filter.frequency.linearRampToValueAtTime(80, now + 0.45);
+
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.32, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+
+                    noise.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    noise.start(now);
+                } catch (e) {}
+            }
+
+            playWhistle() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(2400, now);
+                    osc.frequency.setValueAtTime(2650, now + 0.08);
+                    osc.frequency.setValueAtTime(2350, now + 0.16);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.005, now + 0.28);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.29);
+                } catch (e) {}
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        /**
+         * ============================================================================
+         * 2. HAND-DRAWN SKETCH RENDERING HELPERS
+         * Draws lines, circles, and polygons with subtle organic ink imperfections
+         * ============================================================================
+         */
+        class SketchArtist {
+            // Deterministic pseudo-random offset based on seed so drawings don't flicker crazily
+            static jitter(seed, amp = 1.2) {
+                const x = Math.sin(seed * 12.9898) * 43758.5453;
+                return ((x - Math.floor(x)) - 0.5) * 2 * amp;
+            }
+
+            static drawSketchLine(ctx, x1, y1, x2, y2, seed = 1, wobble = 1.4) {
+                const midX = (x1 + x2) * 0.5 + this.jitter(seed, wobble);
+                const midY = (y1 + y2) * 0.5 + this.jitter(seed + 7, wobble);
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.quadraticCurveTo(midX, midY, x2, y2);
+                ctx.stroke();
+            }
+
+            static drawDoubleSketchCircle(ctx, x, y, r, fillStyle, strokeStyle, lineWidth = 2, seed = 1) {
+                ctx.save();
+                if (fillStyle) {
+                    ctx.fillStyle = fillStyle;
+                    ctx.beginPath();
+                    ctx.arc(x, y, r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.strokeStyle = strokeStyle;
+                ctx.lineWidth = lineWidth;
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Second light hand-drawn pass for authentic sketch style
+                ctx.lineWidth = lineWidth * 0.55;
+                ctx.beginPath();
+                ctx.ellipse(
+                    x + this.jitter(seed, 0.7),
+                    y + this.jitter(seed + 3, 0.7),
+                    r * 1.03,
+                    r * 0.97,
+                    0.3,
+                    0,
+                    Math.PI * 1.75
+                );
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            /**
+             * Draws a Top-Down Infantry Soldier (Head & Shoulders + Arms + Weapon)
+             */
+            static drawSoldier(ctx, unit, time) {
+                ctx.save();
+                ctx.translate(unit.x, unit.y);
+
+                // Selection indicator ring underneath soldier
+                if (unit.selected && unit.team === 'ally') {
+                    ctx.save();
+                    ctx.strokeStyle = '#1d4ed8';
+                    ctx.lineWidth = 2.2;
+                    ctx.setLineDash([5, 3]);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, unit.radius + 7, time * 0.002, time * 0.002 + Math.PI * 2);
+                    ctx.stroke();
+
+                    // Little direction chevron on selection ring
+                    const chevX = Math.cos(unit.angle) * (unit.radius + 10);
+                    const chevY = Math.sin(unit.angle) * (unit.radius + 10);
+                    ctx.fillStyle = '#1d4ed8';
+                    ctx.beginPath();
+                    ctx.arc(chevX, chevY, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // Soft ink shadow underneath
+                ctx.fillStyle = 'rgba(30, 36, 43, 0.14)';
+                ctx.beginPath();
+                ctx.ellipse(2, 3, unit.radius * 1.15, unit.radius * 0.9, unit.angle, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Rotate to soldier's facing angle
+                ctx.rotate(unit.angle);
+
+                // Subtle walking shoulder sway when moving
+                const isMoving = Math.hypot(unit.vx, unit.vy) > 8;
+                const walkSway = isMoving ? Math.sin(time * 0.018 + unit.id * 2.1) * 0.14 : Math.sin(time * 0.003 + unit.id) * 0.02;
+                ctx.rotate(walkSway);
+
+                // Recoil kickback offset
+                const recoilOffset = -unit.recoil * 3.5;
+                ctx.translate(recoilOffset, 0);
+
+                // Team palette (Blue ink vs Red ink, with hand-drawn paper highlights)
+                const isAlly = unit.team === 'ally';
+                const shoulderFill = isAlly ? '#dbeafe' : '#fee2e2';
+                const helmetFill = isAlly ? '#2563eb' : '#dc2626';
+                const inkStroke = '#1e242b';
+
+                // 1. ARMS & HANDS reaching forward toward weapon
+                ctx.strokeStyle = inkStroke;
+                ctx.fillStyle = shoulderFill;
+                ctx.lineWidth = 2;
+
+                // Left arm extending forward-right
+                ctx.beginPath();
+                ctx.roundRect(1, -11, 11, 4.5, 2.5);
+                ctx.fill();
+                ctx.stroke();
+
+                // Right arm extending forward-left (holding rifle stock)
+                ctx.beginPath();
+                ctx.roundRect(1, 6.5, 9.5, 4.5, 2.5);
+                ctx.fill();
+                ctx.stroke();
+
+                // 2. WEAPON (Sketched Rifle / SMG / Sniper)
+                ctx.save();
+                ctx.fillStyle = '#334155';
+                ctx.strokeStyle = inkStroke;
+                ctx.lineWidth = 1.8;
+
+                if (unit.role === 'sniper') {
+                    // Long precision rifle with scope
+                    ctx.beginPath();
+                    ctx.rect(3, -1.5, 21, 3);
+                    ctx.fill();
+                    ctx.stroke();
+                    // Scope tube
+                    ctx.fillStyle = '#0f172a';
+                    ctx.fillRect(6, -2.6, 7, 1.8);
+                } else if (unit.role === 'assault') {
+                    // Compact SMG / Carbine
+                    ctx.beginPath();
+                    ctx.rect(3, -2, 13.5, 3.8);
+                    ctx.fill();
+                    ctx.stroke();
+                } else {
+                    // Standard Infantry Rifle
+                    ctx.beginPath();
+                    ctx.rect(3, -1.8, 17, 3.2);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+
+                // Muzzle flash sketch star if firing just now
+                if (unit.recoil > 0.55) {
+                    const muzzleX = unit.role === 'sniper' ? 25 : (unit.role === 'assault' ? 18 : 21);
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.strokeStyle = '#b45309';
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.moveTo(muzzleX, 0);
+                    ctx.lineTo(muzzleX + 7, -4);
+                    ctx.lineTo(muzzleX + 4, 0);
+                    ctx.lineTo(muzzleX + 8, 4);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                // 3. SHOULDERS (Distinct Top-Down Bean/Broad Shoulders Shape)
+                ctx.fillStyle = unit.hitFlash > 0 ? '#ffffff' : shoulderFill;
+                ctx.strokeStyle = inkStroke;
+                ctx.lineWidth = 2.3;
+
+                ctx.beginPath();
+                // Broad torso/shoulders perpendicular to facing direction (along Y axis in local rotated space)
+                ctx.moveTo(-4, -12.5);
+                ctx.bezierCurveTo(5, -13.5, 6.5, -6, 5.5, 0);
+                ctx.bezierCurveTo(6.5, 6, 5, 13.5, -4, 12.5);
+                ctx.bezierCurveTo(-8.5, 9, -7.5, -9, -4, -12.5);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Hand-drawn cross-hatch shading on back of shoulders
+                ctx.strokeStyle = isAlly ? 'rgba(29, 78, 216, 0.35)' : 'rgba(185, 28, 28, 0.35)';
+                ctx.lineWidth = 1.1;
+                ctx.beginPath();
+                ctx.moveTo(-4, -9); ctx.lineTo(-1, -6);
+                ctx.moveTo(-5, -4); ctx.lineTo(-2, -1);
+                ctx.moveTo(-5, 4);  ctx.lineTo(-2, 7);
+                ctx.moveTo(-4, 8);  ctx.lineTo(-1, 10);
+                ctx.stroke();
+
+                // Backpack / Tactical Rig on back of shoulders
+                ctx.fillStyle = isAlly ? '#93c5fd' : '#fca5a5';
+                ctx.strokeStyle = inkStroke;
+                ctx.lineWidth = 1.6;
+                ctx.beginPath();
+                ctx.roundRect(-8.5, -6.5, 4.2, 13, 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // 4. HEAD & HELMET (Centered on shoulders)
+                const headRadius = 6.6;
+                this.drawDoubleSketchCircle(
+                    ctx,
+                    0.5,
+                    0,
+                    headRadius,
+                    unit.hitFlash > 0 ? '#fef08a' : helmetFill,
+                    inkStroke,
+                    2.2,
+                    unit.id
+                );
+
+                // Helmet rim / visor front curve
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.3;
+                ctx.beginPath();
+                ctx.arc(1.2, 0, headRadius * 0.65, -0.7, 0.7);
+                ctx.stroke();
+
+                // Role Insignia on Helmet (Sniper crosshair, Leader star, Assault chevron)
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.3;
+                if (unit.role === 'sniper') {
+                    ctx.beginPath();
+                    ctx.moveTo(-2.5, 0); ctx.lineTo(2.5, 0);
+                    ctx.moveTo(0, -2.5); ctx.lineTo(0, 2.5);
+                    ctx.stroke();
+                } else if (unit.role === 'assault') {
+                    ctx.beginPath();
+                    ctx.moveTo(-2, -2.5);
+                    ctx.lineTo(1.5, 0);
+                    ctx.lineTo(-2, 2.5);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+
+                // 5. NON-ROTATED OVERLAYS (Health bar & Cover Shield icon)
+                if (unit.hp < unit.maxHp) {
+                    const barW = 24;
+                    const barH = 4;
+                    const bx = unit.x - barW / 2;
+                    const by = unit.y - unit.radius - 12;
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                    ctx.strokeStyle = '#1e242b';
+                    ctx.lineWidth = 1.2;
+                    ctx.fillRect(bx, by, barW, barH);
+                    ctx.strokeRect(bx, by, barW, barH);
+
+                    const ratio = Math.max(0, unit.hp / unit.maxHp);
+                    ctx.fillStyle = unit.team === 'ally' ? '#2563eb' : '#dc2626';
+                    ctx.fillRect(bx + 1, by + 1, (barW - 2) * ratio, barH - 2);
+                }
+
+                // Cover / Trench Shield Badge
+                if (unit.inCover > 0.15) {
+                    const sx = unit.x + 11;
+                    const sy = unit.y - 12;
+                    ctx.save();
+                    ctx.fillStyle = unit.inCover >= 0.45 ? '#16a34a' : '#d97706';
+                    ctx.strokeStyle = '#1e242b';
+                    ctx.lineWidth = 1.3;
+                    ctx.beginPath();
+                    ctx.moveTo(sx, sy - 4.5);
+                    ctx.lineTo(sx + 4, sy - 2.5);
+                    ctx.lineTo(sx + 3, sy + 2.5);
+                    ctx.lineTo(sx, sy + 5);
+                    ctx.lineTo(sx - 3, sy + 2.5);
+                    ctx.lineTo(sx - 4, sy - 2.5);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 3. BATTLEFIELD SCENARIOS & TERRAIN GENERATOR
+         * ============================================================================
+         */
+        const SCENARIOS = [
+            {
+                name: 'معركة الخنادق الوسطى',
+                subtitle: 'سيطر على الخنادق وأكياس الرمل في وسط الورقة',
+                buildObstacles: (w, h) => [
+                    // Central trenches (units can walk inside and gain high cover)
+                    { type: 'trench', x: w * 0.36, y: h * 0.47, w: w * 0.26, h: 46, angle: -0.05 },
+                    { type: 'trench', x: w * 0.18, y: h * 0.62, w: w * 0.16, h: 40, angle: 0.12 },
+                    { type: 'trench', x: w * 0.66, y: h * 0.34, w: w * 0.16, h: 40, angle: 0.12 },
+                    // Sandbag lines (provide directional cover, block movement slightly)
+                    { type: 'sandbag', x: w * 0.28, y: h * 0.36, w: 95, h: 20, angle: 0.25 },
+                    { type: 'sandbag', x: w * 0.68, y: h * 0.62, w: 95, h: 20, angle: 0.25 },
+                    // Solid stone walls (block bullets & movement)
+                    { type: 'wall', x: w * 0.50, y: h * 0.25, w: 90, h: 24, angle: 0 },
+                    { type: 'wall', x: w * 0.50, y: h * 0.75, w: 90, h: 24, angle: 0 },
+                    // Sketch trees
+                    { type: 'tree', x: w * 0.16, y: h * 0.28, r: 28 },
+                    { type: 'tree', x: w * 0.83, y: h * 0.72, r: 30 },
+                    { type: 'tree', x: w * 0.80, y: h * 0.22, r: 24 },
+                    { type: 'tree', x: w * 0.20, y: h * 0.78, r: 25 }
+                ]
+            },
+            {
+                name: 'ممر القلعة المرسومة',
+                subtitle: 'حرب شوارع وسواتر صخرية تتطلب الالتفاف والمناورة',
+                buildObstacles: (w, h) => [
+                    { type: 'wall', x: w * 0.35, y: h * 0.38, w: 28, h: 130, angle: 0 },
+                    { type: 'wall', x: w * 0.65, y: h * 0.62, w: 28, h: 130, angle: 0 },
+                    { type: 'wall', x: w * 0.50, y: h * 0.50, w: 110, h: 28, angle: 0 },
+                    { type: 'sandbag', x: w * 0.35, y: h * 0.68, w: 100, h: 22, angle: -0.2 },
+                    { type: 'sandbag', x: w * 0.65, y: h * 0.32, w: 100, h: 22, angle: -0.2 },
+                    { type: 'trench', x: w * 0.20, y: h * 0.50, w: 110, h: 44, angle: 1.57 },
+                    { type: 'trench', x: w * 0.80, y: h * 0.50, w: 110, h: 44, angle: 1.57 },
+                    { type: 'tree', x: w * 0.48, y: h * 0.20, r: 28 },
+                    { type: 'tree', x: w * 0.52, y: h * 0.80, r: 28 }
+                ]
+            },
+            {
+                name: 'خط الدفاع الأخير',
+                subtitle: 'العدو متحصن خلف خطوط دفاعية متتالية - استخدم الدخان والقنابل',
+                buildObstacles: (w, h) => [
+                    { type: 'trench', x: w * 0.50, y: h * 0.34, w: w * 0.45, h: 44, angle: 0 },
+                    { type: 'sandbag', x: w * 0.25, y: h * 0.54, w: 110, h: 22, angle: 0.1 },
+                    { type: 'sandbag', x: w * 0.50, y: h * 0.56, w: 115, h: 22, angle: 0 },
+                    { type: 'sandbag', x: w * 0.75, y: h * 0.54, w: 110, h: 22, angle: -0.1 },
+                    { type: 'wall', x: w * 0.33, y: h * 0.22, w: 95, h: 24, angle: 0.15 },
+                    { type: 'wall', x: w * 0.67, y: h * 0.22, w: 95, h: 24, angle: -0.15 },
+                    { type: 'tree', x: w * 0.15, y: h * 0.42, r: 26 },
+                    { type: 'tree', x: w * 0.85, y: h * 0.42, r: 26 },
+                    { type: 'tree', x: w * 0.50, y: h * 0.76, r: 30 }
+                ]
+            }
+        ];
+
+        /**
+         * ============================================================================
+         * 4. INFANTRY SOLDIER ENTITY
+         * Handles movement, formation slotting, cover calculation, aiming, and firing
+         * ============================================================================
+         */
+        class Soldier {
+            constructor(id, team, x, y, role = 'rifle', squad = 'alpha') {
+                this.id = id;
+                this.team = team; // 'ally' | 'enemy'
+                this.x = x;
+                this.y = y;
+                this.vx = 0;
+                this.vy = 0;
+                this.radius = 12;
+                this.role = role; // 'rifle' | 'assault' | 'sniper'
+                this.squad = squad; // 'alpha' | 'bravo'
+
+                // Target position & desired facing angle
+                this.targetX = x;
+                this.targetY = y;
+                this.preferredAngle = team === 'ally' ? -Math.PI / 2 : Math.PI / 2;
+                this.angle = this.preferredAngle;
+
+                // Role stats
+                if (role === 'sniper') {
+                    this.maxHp = 85;
+                    this.speed = 76;
+                    this.range = 430;
+                    this.fireDelay = 1.45;
+                    this.damage = 38;
+                    this.accuracy = 0.88;
+                    this.bulletSpeed = 680;
+                } else if (role === 'assault') {
+                    this.maxHp = 115;
+                    this.speed = 104;
+                    this.range = 240;
+                    this.fireDelay = 0.34;
+                    this.damage = 13;
+                    this.accuracy = 0.66;
+                    this.bulletSpeed = 490;
+                } else {
+                    // Standard rifleman
+                    this.maxHp = 100;
+                    this.speed = 90;
+                    this.range = 320;
+                    this.fireDelay = 0.68;
+                    this.damage = 20;
+                    this.accuracy = 0.76;
+                    this.bulletSpeed = 550;
+                }
+
+                this.hp = this.maxHp;
+                this.selected = team === 'ally';
+                this.stance = 'advance'; // 'advance' | 'hold' | 'charge' | 'retreat'
+                this.cooldown = Math.random() * 0.5;
+                this.recoil = 0;
+                this.hitFlash = 0;
+                this.inCover = 0; // 0 = exposed, 0.35 = sandbag, 0.5 = trench
+                this.dead = false;
+            }
+
+            update(dt, game) {
+                if (this.dead) return;
+
+                if (this.recoil > 0) this.recoil = Math.max(0, this.recoil - dt * 4.5);
+                if (this.hitFlash > 0) this.hitFlash = Math.max(0, this.hitFlash - dt * 5);
+                if (this.cooldown > 0) this.cooldown -= dt;
+
+                // Evaluate terrain cover (Trench or nearby Sandbag)
+                this.inCover = game.evaluateUnitCover(this);
+
+                // Find nearest valid enemy
+                const targetEnemy = game.findBestTarget(this);
+
+                // AI behavior for enemy team
+                if (this.team === 'enemy') {
+                    this.updateEnemyAI(dt, game, targetEnemy);
+                } else if (this.stance === 'charge' && targetEnemy) {
+                    // If allied unit is in Charge mode, advance toward nearest enemy
+                    const distToEnemy = Math.hypot(targetEnemy.x - this.x, targetEnemy.y - this.y);
+                    if (distToEnemy > this.range * 0.55) {
+                        this.targetX = targetEnemy.x;
+                        this.targetY = targetEnemy.y;
+                    }
+                }
+
+                // Movement toward targetX, targetY
+                const dx = this.targetX - this.x;
+                const dy = this.targetY - this.y;
+                const dist = Math.hypot(dx, dy);
+
+                let moveSpeed = this.speed;
+                if (this.stance === 'hold') moveSpeed *= 0.0; // Hold position stays anchored unless given a new move order
+                if (this.stance === 'charge') moveSpeed *= 1.25;
+                if (this.inCover >= 0.45) moveSpeed *= 0.82; // Slightly slower inside deep trenches
+
+                if (dist > 4) {
+                    // Automatically release 'hold' if player explicitly dragged a new destination far away
+                    const actualSpeed = dist > 18 && this.stance === 'hold' ? this.speed : moveSpeed;
+                    const step = Math.min(dist, actualSpeed * dt);
+                    this.vx = (dx / dist) * (step / dt);
+                    this.vy = (dy / dist) * (step / dt);
+                } else {
+                    this.vx *= 0.6;
+                    this.vy *= 0.6;
+                }
+
+                // Soft separation between nearby soldiers so head-and-shoulders don't overlap
+                for (const other of game.units) {
+                    if (other === this || other.dead) continue;
+                    const ox = this.x - other.x;
+                    const oy = this.y - other.y;
+                    const od = Math.hypot(ox, oy);
+                    const minDist = this.radius + other.radius + 4;
+                    if (od > 0.001 && od < minDist) {
+                        const push = ((minDist - od) / minDist) * 140;
+                        this.vx += (ox / od) * push;
+                        this.vy += (oy / od) * push;
+                    }
+                }
+
+                this.x += this.vx * dt;
+                this.y += this.vy * dt;
+
+                // Resolve collisions with solid walls and canvas bounds
+                game.resolveObstacleCollisions(this);
+
+                // Smooth angular rotation:
+                // Priority 1: Enemy within range (or player mouse aim during direct WASD control)
+                // Priority 2: Movement direction if moving fast
+                // Priority 3: Assigned formation facing angle
+                let desiredAngle = this.preferredAngle;
+
+                if (targetEnemy) {
+                    const distEnemy = Math.hypot(targetEnemy.x - this.x, targetEnemy.y - this.y);
+                    if (distEnemy <= this.range * 1.15) {
+                        desiredAngle = Math.atan2(targetEnemy.y - this.y, targetEnemy.x - this.x);
+                    } else if (dist > 10 && this.stance !== 'retreat') {
+                        desiredAngle = Math.atan2(dy, dx);
+                    }
+                } else if (dist > 10 && this.stance !== 'retreat') {
+                    desiredAngle = Math.atan2(dy, dx);
+                }
+
+                // Smoothly interpolate angle
+                let angleDiff = desiredAngle - this.angle;
+                while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                this.angle += angleDiff * Math.min(1, dt * 10);
+
+                // Firing logic
+                if (targetEnemy && this.cooldown <= 0) {
+                    const distEnemy = Math.hypot(targetEnemy.x - this.x, targetEnemy.y - this.y);
+                    if (distEnemy <= this.range && Math.abs(angleDiff) < 0.45) {
+                        // Check line of sight (not blocked by solid stone wall right in front)
+                        if (!game.isLineBlockedByWall(this.x, this.y, targetEnemy.x, targetEnemy.y)) {
+                            this.fireAt(targetEnemy, game);
+                        }
+                    }
+                }
+            }
+
+            updateEnemyAI(dt, game, targetEnemy) {
+                if (!targetEnemy) return;
+                const dist = Math.hypot(targetEnemy.x - this.x, targetEnemy.y - this.y);
+
+                // Periodically re-evaluate tactical position
+                if (Math.random() < dt * 1.4) {
+                    // Look for nearby unoccupied trench or sandbag cover if taking fire or within range
+                    const bestCoverSpot = game.findTacticalCoverSpot(this, targetEnemy);
+                    if (bestCoverSpot && dist < this.range * 1.25) {
+                        this.targetX = bestCoverSpot.x;
+                        this.targetY = bestCoverSpot.y;
+                    } else if (dist > this.range * 0.85) {
+                        // Advance toward allied battalion with slight lateral flanking spread
+                        const flankAngle = Math.atan2(targetEnemy.y - this.y, targetEnemy.x - this.x) + ((this.id % 2 === 0 ? 1 : -1) * 0.25);
+                        this.targetX = this.x + Math.cos(flankAngle) * 95;
+                        this.targetY = this.y + Math.sin(flankAngle) * 95;
+                    }
+                    this.preferredAngle = Math.atan2(targetEnemy.y - this.y, targetEnemy.x - this.x);
+                }
+            }
+
+            fireAt(target, game) {
+                this.cooldown = this.fireDelay * (0.9 + Math.random() * 0.25);
+                this.recoil = 1.0;
+
+                // Calculate accuracy modifiers (Hold stance improves aim, moving reduces aim, smoke clouds reduce aim)
+                let acc = this.accuracy;
+                if (this.stance === 'hold') acc += 0.12;
+                if (Math.hypot(this.vx, this.vy) > 25) acc -= 0.18;
+                if (game.isLineThroughSmoke(this.x, this.y, target.x, target.y)) acc -= 0.38;
+
+                const maxSpread = (1 - Math.max(0.15, Math.min(0.96, acc))) * 0.38;
+                const spread = (Math.random() - 0.5) * 2 * maxSpread;
+                const shotAngle = Math.atan2(target.y - this.y, target.x - this.x) + spread;
+
+                const muzzleDist = this.radius + 8;
+                const bx = this.x + Math.cos(this.angle) * muzzleDist;
+                const by = this.y + Math.sin(this.angle) * muzzleDist;
+
+                game.spawnBullet(this, bx, by, shotAngle);
+                sound.playShot(this.role);
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 5. MAIN BATTLEFIELD ENGINE & PERFECT CONTROL CONTROLLER
+         * ============================================================================
+         */
+        class BattalionGame {
+            constructor() {
+                this.canvas = document.getElementById('battleCanvas');
+                this.ctx = this.canvas.getContext('2d');
+
+                this.scenarioIndex = 0;
+                this.units = [];
+                this.bullets = [];
+                this.particles = [];
+                this.decals = []; // Permanent ink splatters / craters / fallen helmet sketches on the paper
+                this.obstacles = [];
+                this.smokes = [];
+                this.grenades = [];
+
+                // Tactical Control State
+                this.pointerMode = 'select'; // 'select' (Left=Box, Right=LineMove) | 'command' (Left/Touch=LineMove)
+                this.formation = 'line';     // 'line' | 'wedge' | 'loose' | 'arc'
+                this.activeAbility = null;   // null | 'frag' | 'smoke'
+
+                // Ability charges
+                this.abilities = { frag: 3, smoke: 2, heal: 2 };
+
+                // Mouse / Touch Interaction State
+                this.pointer = {
+                    x: 0, y: 0,
+                    startX: 0, startY: 0,
+                    isDown: false,
+                    button: 0,
+                    action: null, // 'box' | 'line' | 'ability'
+                    linePoints: []
+                };
+
+                // Direct Keyboard Control State (WASD / Arrows)
+                this.keys = {};
+
+                // Battle stats
+                this.shotsFired = 0;
+                this.shotsHit = 0;
+                this.elapsedTime = 0;
+                this.battleEnded = false;
+
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+                this.bindInputEvents();
+                this.bindUIEvents();
+                this.loadScenario(this.scenarioIndex);
+            }
+
+            resize() {
+                const rect = this.canvas.parentElement.getBoundingClientRect();
+                this.width = Math.max(320, rect.width);
+                this.height = Math.max(320, rect.height);
+                this.canvas.width = this.width;
+                this.canvas.height = this.height;
+            }
+
+            loadScenario(index) {
+                this.scenarioIndex = (index + SCENARIOS.length) % SCENARIOS.length;
+                const scen = SCENARIOS[this.scenarioIndex];
+
+                document.getElementById('battleTitle').textContent = scen.name;
+                document.getElementById('battleTimer').textContent = scen.subtitle;
+                document.getElementById('endGameModal').classList.add('hidden');
+
+                this.units = [];
+                this.bullets = [];
+                this.particles = [];
+                this.decals = [];
+                this.smokes = [];
+                this.grenades = [];
+                this.obstacles = scen.buildObstacles(this.width, this.height);
+
+                this.abilities = { frag: 3, smoke: 2, heal: 2 };
+                this.activeAbility = null;
+                this.shotsFired = 0;
+                this.shotsHit = 0;
+                this.elapsedTime = 0;
+                this.battleEnded = false;
+
+                // Spawn Allied Battalion (Bottom side, 12 soldiers: Alpha Assault Squad + Bravo Rifle/Sniper Squad)
+                const allyStartY = this.height * 0.84;
+                const allyRoles = [
+                    { role: 'assault', squad: 'alpha' },
+                    { role: 'assault', squad: 'alpha' },
+                    { role: 'rifle',   squad: 'alpha' },
+                    { role: 'rifle',   squad: 'alpha' },
+                    { role: 'assault', squad: 'alpha' },
+                    { role: 'assault', squad: 'alpha' },
+                    { role: 'rifle',   squad: 'bravo' },
+                    { role: 'rifle',   squad: 'bravo' },
+                    { role: 'sniper',  squad: 'bravo' },
+                    { role: 'sniper',  squad: 'bravo' },
+                    { role: 'rifle',   squad: 'bravo' },
+                    { role: 'rifle',   squad: 'bravo' }
+                ];
+
+                const spacing = Math.min(38, (this.width * 0.65) / allyRoles.length);
+                const startX = (this.width - (allyRoles.length - 1) * spacing) / 2;
+
+                allyRoles.forEach((cfg, i) => {
+                    const sx = startX + i * spacing;
+                    const sy = allyStartY + (i % 2 === 0 ? 0 : 16);
+                    this.units.push(new Soldier(i + 1, 'ally', sx, sy, cfg.role, cfg.squad));
+                });
+
+                // Spawn Enemy Battalion (Top side, 12 soldiers)
+                const enemyStartY = this.height * 0.14;
+                allyRoles.forEach((cfg, i) => {
+                    const ex = startX + i * spacing;
+                    const ey = enemyStartY + (i % 2 === 0 ? 0 : -16);
+                    this.units.push(new Soldier(100 + i, 'enemy', ex, ey, cfg.role, cfg.squad));
+                });
+
+                this.updateHUD();
+            }
+
+            bindInputEvents() {
+                // Prevent context menu so Right-Click Drag works seamlessly for tactical line drawing
+                this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+                this.canvas.addEventListener('pointerdown', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    this.pointer.x = x;
+                    this.pointer.y = y;
+                    this.pointer.startX = x;
+                    this.pointer.startY = y;
+                    this.pointer.isDown = true;
+                    this.pointer.button = e.button;
+
+                    // If an ability (Frag / Smoke) is armed, deploy it at click point!
+                    if (this.activeAbility) {
+                        this.deployAbilityAt(this.activeAbility, x, y);
+                        this.activeAbility = null;
+                        this.pointer.isDown = false;
+                        this.updateHUD();
+                        return;
+                    }
+
+                    // Right click OR Command Mode triggers tactical Line-Formation Drag
+                    if (e.button === 2 || this.pointerMode === 'command') {
+                        this.pointer.action = 'line';
+                        this.pointer.linePoints = [{ x, y }];
+                    } else {
+                        this.pointer.action = 'box';
+                    }
+                });
+
+                window.addEventListener('pointermove', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    this.pointer.x = x;
+                    this.pointer.y = y;
+
+                    if (this.pointer.isDown && this.pointer.action === 'line') {
+                        const lastPt = this.pointer.linePoints[this.pointer.linePoints.length - 1];
+                        if (!lastPt || Math.hypot(x - lastPt.x, y - lastPt.y) > 14) {
+                            this.pointer.linePoints.push({ x, y });
+                        }
+                    }
+                });
+
+                window.addEventListener('pointerup', (e) => {
+                    if (!this.pointer.isDown) return;
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const dragDist = Math.hypot(x - this.pointer.startX, y - this.pointer.startY);
+
+                    if (this.pointer.action === 'line') {
+                        if (dragDist < 18) {
+                            // Quick tap/click in move mode -> Move selected units in current formation to (x,y)
+                            this.issueFormationMove(x, y);
+                        } else {
+                            // Dragged a custom line -> Distribute selected units along the drawn line!
+                            this.issueCustomLineFormation(this.pointer.startX, this.pointer.startY, x, y);
+                        }
+                        sound.playClick();
+                    } else if (this.pointer.action === 'box') {
+                        if (dragDist < 12) {
+                            // Single Left Click: check if clicked on an allied unit, otherwise smart move if clicking empty ground!
+                            const clickedUnit = this.getAllyAt(x, y);
+                            if (clickedUnit) {
+                                // Select that unit (or its squad on double click)
+                                this.units.forEach(u => {
+                                    if (u.team === 'ally') u.selected = (u === clickedUnit);
+                                });
+                                sound.playClick();
+                            } else {
+                                // Clicking on empty battlefield moves selected soldiers there!
+                                this.issueFormationMove(x, y);
+                                sound.playClick();
+                            }
+                        } else {
+                            // Box Selection
+                            const minX = Math.min(this.pointer.startX, x);
+                            const maxX = Math.max(this.pointer.startX, x);
+                            const minY = Math.min(this.pointer.startY, y);
+                            const maxY = Math.max(this.pointer.startY, y);
+
+                            let anyInside = false;
+                            this.units.forEach(u => {
+                                if (u.team === 'ally' && !u.dead) {
+                                    if (u.x >= minX && u.x <= maxX && u.y >= minY && u.y <= maxY) {
+                                        anyInside = true;
+                                    }
+                                }
+                            });
+
+                            if (anyInside) {
+                                this.units.forEach(u => {
+                                    if (u.team === 'ally' && !u.dead) {
+                                        u.selected = (u.x >= minX && u.x <= maxX && u.y >= minY && u.y <= maxY);
+                                    }
+                                });
+                                sound.playClick();
+                            }
+                        }
+                    }
+
+                    this.pointer.isDown = false;
+                    this.pointer.action = null;
+                    this.pointer.linePoints = [];
+                    this.updateHUD();
+                });
+
+                // Keyboard shortcuts & WASD direct control
+                window.addEventListener('keydown', (e) => {
+                    const key = e.key.toLowerCase();
+                    this.keys[key] = true;
+
+                    if (key === '1') this.selectSquad('all');
+                    if (key === '2') this.selectSquad('alpha');
+                    if (key === '3') this.selectSquad('bravo');
+                    if (key === 'h') this.setStance('hold');
+                    if (key === 'c') this.setStance('charge');
+                    if (key === 'g' || key === 'ل') this.toggleAbility('frag');
+                    if (key === 'f' || key === 'ب') this.toggleAbility('smoke');
+                    if (key === 'e' || key === 'ث') this.triggerHeal();
+                });
+
+                window.addEventListener('keyup', (e) => {
+                    this.keys[e.key.toLowerCase()] = false;
+                });
+            }
+
+            getSelectedAllies() {
+                const selected = this.units.filter(u => u.team === 'ally' && !u.dead && u.selected);
+                if (selected.length > 0) return selected;
+                // Fallback: if none selected, command all living allies so controls never feel unresponsive
+                return this.units.filter(u => u.team === 'ally' && !u.dead);
+            }
+
+            getAllyAt(x, y) {
+                return this.units.find(u => u.team === 'ally' && !u.dead && Math.hypot(u.x - x, u.y - y) <= u.radius + 8);
+            }
+
+            /**
+             * Computes preview slots for either a custom dragged line or a formation center
+             */
+            computeLineSlots(x1, y1, x2, y2, count) {
+                const slots = [];
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const len = Math.hypot(dx, dy);
+
+                // Facing angle is perpendicular to the drawn line, oriented toward the enemy centroid (or direction of drag)
+                const enemies = this.units.filter(u => u.team === 'enemy' && !u.dead);
+                let enemyCenterX = this.width / 2;
+                let enemyCenterY = 0;
+                if (enemies.length > 0) {
+                    enemyCenterX = enemies.reduce((s, u) => s + u.x, 0) / enemies.length;
+                    enemyCenterY = enemies.reduce((s, u) => s + u.y, 0) / enemies.length;
+                }
+
+                const lineAngle = Math.atan2(dy, dx);
+                let normalAngle = lineAngle - Math.PI / 2;
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2;
+                const toEnemyAngle = Math.atan2(enemyCenterY - midY, enemyCenterX - midX);
+
+                // Pick the perpendicular normal that faces closest toward the enemy
+                let diff = toEnemyAngle - normalAngle;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                if (Math.abs(diff) > Math.PI / 2) {
+                    normalAngle += Math.PI;
+                }
+
+                for (let i = 0; i < count; i++) {
+                    const t = count === 1 ? 0.5 : i / (count - 1);
+                    slots.push({
+                        x: x1 + dx * t,
+                        y: y1 + dy * t,
+                        angle: normalAngle
+                    });
+                }
+                return slots;
+            }
+
+            issueCustomLineFormation(x1, y1, x2, y2) {
+                const allies = this.getSelectedAllies();
+                if (allies.length === 0) return;
+
+                const slots = this.computeLineSlots(x1, y1, x2, y2, allies.length);
+                allies.forEach((u, i) => {
+                    u.stance = 'advance';
+                    u.targetX = slots[i].x;
+                    u.targetY = slots[i].y;
+                    u.preferredAngle = slots[i].angle;
+                });
+
+                this.spawnOrderMarker((x1 + x2) / 2, (y1 + y2) / 2);
+            }
+
+            issueFormationMove(cx, cy, overrideStance = 'advance') {
+                const allies = this.getSelectedAllies();
+                if (allies.length === 0) return;
+
+                // Determine group centroid to establish forward orientation
+                const avgX = allies.reduce((s, u) => s + u.x, 0) / allies.length;
+                const avgY = allies.reduce((s, u) => s + u.y, 0) / allies.length;
+
+                let forwardAngle = Math.atan2(cy - avgY, cx - avgX);
+                if (Math.hypot(cx - avgX, cy - avgY) < 20) {
+                    forwardAngle = -Math.PI / 2;
+                }
+
+                const rightAngle = forwardAngle + Math.PI / 2;
+                const count = allies.length;
+
+                allies.forEach((u, i) => {
+                    u.stance = overrideStance;
+                    const centeredIndex = i - (count - 1) / 2;
+                    let offsetX = 0;
+                    let offsetY = 0;
+
+                    if (this.formation === 'line') {
+                        const spacing = 32;
+                        offsetX = Math.cos(rightAngle) * (centeredIndex * spacing);
+                        offsetY = Math.sin(rightAngle) * (centeredIndex * spacing);
+                    } else if (this.formation === 'wedge') {
+                        const spacing = 28;
+                        const depth = Math.abs(centeredIndex) * 20;
+                        offsetX = Math.cos(rightAngle) * (centeredIndex * spacing) - Math.cos(forwardAngle) * depth;
+                        offsetY = Math.sin(rightAngle) * (centeredIndex * spacing) - Math.sin(forwardAngle) * depth;
+                    } else if (this.formation === 'loose') {
+                        const cols = 4;
+                        const row = Math.floor(i / cols);
+                        const col = (i % cols) - 1.5;
+                        const spacing = 46;
+                        offsetX = Math.cos(rightAngle) * (col * spacing) - Math.cos(forwardAngle) * (row * spacing);
+                        offsetY = Math.sin(rightAngle) * (col * spacing) - Math.sin(forwardAngle) * (row * spacing);
+                    } else if (this.formation === 'arc') {
+                        const arcSpan = Math.PI * 0.7;
+                        const a = forwardAngle + (count === 1 ? 0 : (centeredIndex / count) * arcSpan);
+                        const r = 75;
+                        offsetX = Math.cos(a) * r - Math.cos(forwardAngle) * r;
+                        offsetY = Math.sin(a) * r - Math.sin(forwardAngle) * r;
+                    }
+
+                    u.targetX = Math.max(24, Math.min(this.width - 24, cx + offsetX));
+                    u.targetY = Math.max(24, Math.min(this.height - 24, cy + offsetY));
+                    u.preferredAngle = forwardAngle;
+                });
+
+                this.spawnOrderMarker(cx, cy);
+            }
+
+            spawnOrderMarker(x, y) {
+                this.particles.push({
+                    type: 'ring',
+                    x, y,
+                    r: 4,
+                    maxR: 26,
+                    alpha: 0.9,
+                    color: '#1d4ed8'
+                });
+            }
+
+            bindUIEvents() {
+                // Pointer Mode Switcher
+                const modeSelectBtn = document.getElementById('modeSelectBtn');
+                const modeCommandBtn = document.getElementById('modeCommandBtn');
+
+                modeSelectBtn.addEventListener('click', () => {
+                    this.pointerMode = 'select';
+                    modeSelectBtn.classList.add('active-blue');
+                    modeCommandBtn.classList.remove('active-blue');
+                    this.showToast('وضع التحديد: اسحب بالزر الأيسر لتحديد الجنود، أو اسحب بالزر الأيمن لرسم خط انتشار');
+                    sound.playClick();
+                });
+
+                modeCommandBtn.addEventListener('click', () => {
+                    this.pointerMode = 'command';
+                    modeCommandBtn.classList.add('active-blue');
+                    modeSelectBtn.classList.remove('active-blue');
+                    this.showToast('وضع رسم الخط التكتيكي: اسحب مباشرة على الخريطة لرسم خط توزع الجنود واتجاههم!');
+                    sound.playClick();
+                });
+
+                // Squad Selection Buttons
+                document.querySelectorAll('.squad-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.selectSquad(btn.dataset.squad);
+                        sound.playClick();
+                    });
+                });
+
+                // Formation Buttons
+                document.querySelectorAll('.formation-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.formation = btn.dataset.formation;
+                        document.querySelectorAll('.formation-btn').forEach(b => b.classList.remove('active-blue'));
+                        btn.classList.add('active-blue');
+
+                        // Immediately reform selected units around their current centroid
+                        const allies = this.getSelectedAllies();
+                        if (allies.length > 0) {
+                            const cx = allies.reduce((s, u) => s + u.targetX, 0) / allies.length;
+                            const cy = allies.reduce((s, u) => s + u.targetY, 0) / allies.length;
+                            this.issueFormationMove(cx, cy);
+                        }
+                        sound.playClick();
+                    });
+                });
+
+                // Stances
+                document.getElementById('stanceHoldBtn').addEventListener('click', () => this.setStance('hold'));
+                document.getElementById('stanceChargeBtn').addEventListener('click', () => this.setStance('charge'));
+                document.getElementById('stanceRetreatBtn').addEventListener('click', () => this.setStance('retreat'));
+
+                // Abilities
+                document.getElementById('abilityFragBtn').addEventListener('click', () => this.toggleAbility('frag'));
+                document.getElementById('abilitySmokeBtn').addEventListener('click', () => this.toggleAbility('smoke'));
+                document.getElementById('abilityHealBtn').addEventListener('click', () => this.triggerHeal());
+
+                // Top Header Controls
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    sound.playClick();
+                    this.loadScenario(this.scenarioIndex);
+                });
+                document.getElementById('prevMapBtn').addEventListener('click', () => {
+                    sound.playClick();
+                    this.loadScenario(this.scenarioIndex - 1);
+                });
+                document.getElementById('nextMapBtn').addEventListener('click', () => {
+                    sound.playClick();
+                    this.loadScenario(this.scenarioIndex + 1);
+                });
+
+                document.getElementById('modalRestartBtn').addEventListener('click', () => {
+                    sound.playClick();
+                    this.loadScenario(this.scenarioIndex);
+                });
+                document.getElementById('modalNextBattleBtn').addEventListener('click', () => {
+                    sound.playClick();
+                    this.loadScenario(this.scenarioIndex + 1);
+                });
+
+                // Help Modal
+                const helpModal = document.getElementById('helpModal');
+                document.getElementById('helpModalBtn').addEventListener('click', () => {
+                    sound.playClick();
+                    helpModal.classList.remove('hidden');
+                });
+                document.getElementById('closeHelpBtn').addEventListener('click', () => helpModal.classList.add('hidden'));
+                document.getElementById('gotItHelpBtn').addEventListener('click', () => helpModal.classList.add('hidden'));
+
+                // Sound Toggle
+                const soundBtn = document.getElementById('soundToggleBtn');
+                soundBtn.addEventListener('click', () => {
+                    sound.enabled = !sound.enabled;
+                    soundBtn.textContent = sound.enabled ? '🔊' : '🔇';
+                });
+            }
+
+            selectSquad(squadName) {
+                this.units.forEach(u => {
+                    if (u.team === 'ally' && !u.dead) {
+                        u.selected = (squadName === 'all' || u.squad === squadName);
+                    }
+                });
+                document.querySelectorAll('.squad-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.squad === squadName);
+                });
+                this.updateHUD();
+            }
+
+            setStance(stance) {
+                const allies = this.getSelectedAllies();
+                if (allies.length === 0) return;
+
+                if (stance === 'hold') {
+                    allies.forEach(u => {
+                        u.stance = 'hold';
+                        u.targetX = u.x;
+                        u.targetY = u.y;
+                    });
+                    this.showToast('🛡️ أمر ثبات: الجنود متمركزون في مواقعهم بدقة تصويب عالية');
+                    sound.playClick();
+                } else if (stance === 'charge') {
+                    allies.forEach(u => {
+                        u.stance = 'charge';
+                    });
+                    this.showToast('⚔️ أمر اقتحام! الكتيبة تتقدم بسرعة نحو العدو');
+                    sound.playWhistle();
+                } else if (stance === 'retreat') {
+                    const cx = allies.reduce((s, u) => s + u.x, 0) / allies.length;
+                    const cy = Math.min(this.height - 45, (allies.reduce((s, u) => s + u.y, 0) / allies.length) + 115);
+                    this.issueFormationMove(cx, cy, 'retreat');
+                    allies.forEach(u => u.preferredAngle = -Math.PI / 2);
+                    this.showToast('↩ تراجع تكتيكي مع استمرار التغطية النارية');
+                    sound.playClick();
+                }
+            }
+
+            toggleAbility(type) {
+                if (this.abilities[type] <= 0) {
+                    this.showToast('نفدت ذخيرة هذه القدرة التكتيكية!');
+                    return;
+                }
+                if (this.activeAbility === type) {
+                    this.activeAbility = null;
+                    this.showToast('تم إلغاء التوجيه');
+                } else {
+                    this.activeAbility = type;
+                    const label = type === 'frag' ? '💣 انقر على تجمع للعدو لإلقاء القنبلة اليدوية!' : '💨 انقر على الميدان لإطلاق سحابة دخان للتغطية!';
+                    this.showToast(label);
+                }
+                sound.playClick();
+                this.updateHUD();
+            }
+
+            deployAbilityAt(type, targetX, targetY) {
+                const allies = this.getSelectedAllies();
+                if (allies.length === 0 || this.abilities[type] <= 0) return;
+
+                // Pick closest selected ally to throw the grenade/smoke
+                let thrower = allies[0];
+                let bestD = Infinity;
+                allies.forEach(u => {
+                    const d = Math.hypot(u.x - targetX, u.y - targetY);
+                    if (d < bestD) { bestD = d; thrower = u; }
+                });
+
+                this.abilities[type]--;
+                this.grenades.push({
+                    type,
+                    startX: thrower.x,
+                    startY: thrower.y,
+                    x: thrower.x,
+                    y: thrower.y,
+                    targetX,
+                    targetY,
+                    progress: 0,
+                    duration: Math.max(0.45, Math.min(0.95, bestD / 420))
+                });
+                sound.playWhistle();
+            }
+
+            triggerHeal() {
+                if (this.abilities.heal <= 0) {
+                    this.showToast('نفدت حقائب الإسعاف الميداني!');
+                    return;
+                }
+                const allies = this.getSelectedAllies();
+                let healedAny = false;
+                allies.forEach(u => {
+                    if (u.hp < u.maxHp) {
+                        u.hp = Math.min(u.maxHp, u.hp + 45);
+                        healedAny = true;
+                        for (let i = 0; i < 5; i++) {
+                            this.particles.push({
+                                type: 'spark',
+                                x: u.x + (Math.random() - 0.5) * 18,
+                                y: u.y + (Math.random() - 0.5) * 18,
+                                vx: (Math.random() - 0.5) * 20,
+                                vy: -20 - Math.random() * 25,
+                                life: 0.6,
+                                maxLife: 0.6,
+                                color: '#16a34a',
+                                size: 3
+                            });
+                        }
+                    }
+                });
+
+                if (healedAny) {
+                    this.abilities.heal--;
+                    this.showToast('➕ تم إسعاف الجنود المحددين ورفع جاهزيتهم!');
+                    sound.playClick();
+                    this.updateHUD();
+                } else {
+                    this.showToast('جميع الجنود المحددين بصحة كاملة!');
+                }
+            }
+
+            showToast(msg) {
+                const toast = document.getElementById('tacticalToast');
+                toast.textContent = msg;
+                toast.style.opacity = '1';
+            }
+
+            updateHUD() {
+                const alliesAlive = this.units.filter(u => u.team === 'ally' && !u.dead);
+                const enemiesAlive = this.units.filter(u => u.team === 'enemy' && !u.dead);
+                const selectedAlive = alliesAlive.filter(u => u.selected);
+
+                document.getElementById('allyCountText').textContent = `${alliesAlive.length} / 12`;
+                document.getElementById('enemyCountText').textContent = `${enemiesAlive.length} / 12`;
+                document.getElementById('selectedCountText').textContent = selectedAlive.length;
+
+                document.getElementById('fragCountBadge').textContent = this.abilities.frag;
+                document.getElementById('smokeCountBadge').textContent = this.abilities.smoke;
+                document.getElementById('healCountBadge').textContent = this.abilities.heal;
+
+                document.getElementById('abilityFragBtn').classList.toggle('active-blue', this.activeAbility === 'frag');
+                document.getElementById('abilitySmokeBtn').classList.toggle('active-blue', this.activeAbility === 'smoke');
+            }
+
+            evaluateUnitCover(unit) {
+                let bestCover = 0;
+                for (const obs of this.obstacles) {
+                    if (obs.type === 'trench') {
+                        const dx = unit.x - obs.x;
+                        const dy = unit.y - obs.y;
+                        const cos = Math.cos(-obs.angle);
+                        const sin = Math.sin(-obs.angle);
+                        const lx = dx * cos - dy * sin;
+                        const ly = dx * sin + dy * cos;
+                        if (Math.abs(lx) <= obs.w / 2 && Math.abs(ly) <= obs.h / 2) {
+                            bestCover = Math.max(bestCover, 0.5);
+                        }
+                    } else if (obs.type === 'sandbag') {
+                        const dx = unit.x - obs.x;
+                        const dy = unit.y - obs.y;
+                        const cos = Math.cos(-obs.angle);
+                        const sin = Math.sin(-obs.angle);
+                        const lx = dx * cos - dy * sin;
+                        const ly = dx * sin + dy * cos;
+                        if (Math.abs(lx) <= obs.w / 2 + 16 && Math.abs(ly) <= obs.h / 2 + 24) {
+                            bestCover = Math.max(bestCover, 0.38);
+                        }
+                    } else if (obs.type === 'tree') {
+                        if (Math.hypot(unit.x - obs.x, unit.y - obs.y) <= obs.r + 12) {
+                            bestCover = Math.max(bestCover, 0.25);
+                        }
+                    }
+                }
+                return bestCover;
+            }
+
+            findTacticalCoverSpot(unit, enemy) {
+                let bestSpot = null;
+                let bestScore = Infinity;
+                for (const obs of this.obstacles) {
+                    if (obs.type === 'trench' || obs.type === 'sandbag') {
+                        const spotX = obs.x + (Math.random() - 0.5) * (obs.w * 0.6);
+                        const spotY = obs.y + (obs.type === 'sandbag' ? -18 : 0);
+                        const d = Math.hypot(spotX - unit.x, spotY - unit.y);
+                        if (d < 160 && d < bestScore) {
+                            bestScore = d;
+                            bestSpot = { x: spotX, y: spotY };
+                        }
+                    }
+                }
+                return bestSpot;
+            }
+
+            resolveObstacleCollisions(unit) {
+                // Keep within canvas bounds
+                const pad = unit.radius + 6;
+                unit.x = Math.max(pad, Math.min(this.width - pad, unit.x));
+                unit.y = Math.max(pad, Math.min(this.height - pad, unit.y));
+
+                for (const obs of this.obstacles) {
+                    if (obs.type === 'wall' || obs.type === 'sandbag') {
+                        // Transform unit position into obstacle local space
+                        const dx = unit.x - obs.x;
+                        const dy = unit.y - obs.y;
+                        const cos = Math.cos(-obs.angle);
+                        const sin = Math.sin(-obs.angle);
+                        const lx = dx * cos - dy * sin;
+                        const ly = dx * sin + dy * cos;
+
+                        const halfW = obs.w / 2;
+                        const halfH = obs.h / 2;
+                        const closestX = Math.max(-halfW, Math.min(halfW, lx));
+                        const closestY = Math.max(-halfH, Math.min(halfH, ly));
+                        const distX = lx - closestX;
+                        const distY = ly - closestY;
+                        const dist = Math.hypot(distX, distY);
+
+                        if (dist < unit.radius && dist > 0.0001) {
+                            const overlap = unit.radius - dist;
+                            const nx = distX / dist;
+                            const ny = distY / dist;
+                            const worldNx = nx * Math.cos(obs.angle) - ny * Math.sin(obs.angle);
+                            const worldNy = nx * Math.sin(obs.angle) + ny * Math.cos(obs.angle);
+                            unit.x += worldNx * overlap;
+                            unit.y += worldNy * overlap;
+                        }
+                    } else if (obs.type === 'tree') {
+                        const dx = unit.x - obs.x;
+                        const dy = unit.y - obs.y;
+                        const d = Math.hypot(dx, dy);
+                        const trunkR = 8;
+                        if (d < unit.radius + trunkR && d > 0.001) {
+                            const overlap = (unit.radius + trunkR) - d;
+                            unit.x += (dx / d) * overlap;
+                            unit.y += (dy / d) * overlap;
+                        }
+                    }
+                }
+            }
+
+            isLineBlockedByWall(x1, y1, x2, y2) {
+                const steps = 10;
+                for (let i = 1; i < steps; i++) {
+                    const t = i / steps;
+                    const px = x1 + (x2 - x1) * t;
+                    const py = y1 + (y2 - y1) * t;
+                    for (const obs of this.obstacles) {
+                        if (obs.type === 'wall') {
+                            const dx = px - obs.x;
+                            const dy = py - obs.y;
+                            const cos = Math.cos(-obs.angle);
+                            const sin = Math.sin(-obs.angle);
+                            const lx = dx * cos - dy * sin;
+                            const ly = dx * sin + dy * cos;
+                            if (Math.abs(lx) <= obs.w / 2 && Math.abs(ly) <= obs.h / 2) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+
+            isLineThroughSmoke(x1, y1, x2, y2) {
+                for (const s of this.smokes) {
+                    // Distance from smoke center to segment
+                    const A = x2 - x1;
+                    const B = y2 - y1;
+                    const lenSq = A * A + B * B;
+                    let t = lenSq > 0 ? ((s.x - x1) * A + (s.y - y1) * B) / lenSq : 0;
+                    t = Math.max(0, Math.min(1, t));
+                    const nearX = x1 + t * A;
+                    const nearY = y1 + t * B;
+                    if (Math.hypot(s.x - nearX, s.y - nearY) <= s.r) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            findBestTarget(unit) {
+                let best = null;
+                let bestScore = Infinity;
+                for (const other of this.units) {
+                    if (other.team === unit.team || other.dead) continue;
+                    const d = Math.hypot(other.x - unit.x, other.y - unit.y);
+                    // Prefer closer enemies that are not behind solid walls
+                    const wallPenalty = this.isLineBlockedByWall(unit.x, unit.y, other.x, other.y) ? 280 : 0;
+                    const score = d + wallPenalty;
+                    if (score < bestScore) {
+                        bestScore = score;
+                        best = other;
+                    }
+                }
+                return best;
+            }
+
+            spawnBullet(shooter, x, y, angle) {
+                if (shooter.team === 'ally') this.shotsFired++;
+                this.bullets.push({
+                    team: shooter.team,
+                    x, y,
+                    prevX: x,
+                    prevY: y,
+                    vx: Math.cos(angle) * shooter.bulletSpeed,
+                    vy: Math.sin(angle) * shooter.bulletSpeed,
+                    damage: shooter.damage,
+                    life: shooter.range / shooter.bulletSpeed + 0.15
+                });
+            }
+
+            update(dt) {
+                if (this.battleEnded) return;
+                this.elapsedTime += dt;
+
+                // Handle Direct WASD / Arrow Key Battalion Movement
+                let moveX = 0;
+                let moveY = 0;
+                if (this.keys['w'] || this.keys['arrowup'] || this.keys['ص']) moveY -= 1;
+                if (this.keys['s'] || this.keys['arrowdown'] || this.keys['س']) moveY += 1;
+                if (this.keys['a'] || this.keys['arrowleft'] || this.keys['ش']) moveX -= 1;
+                if (this.keys['d'] || this.keys['arrowright'] || this.keys['ي']) moveX += 1;
+
+                if (moveX !== 0 || moveY !== 0) {
+                    const len = Math.hypot(moveX, moveY);
+                    const nx = moveX / len;
+                    const ny = moveY / len;
+                    const allies = this.getSelectedAllies();
+                    allies.forEach(u => {
+                        u.stance = 'advance';
+                        u.targetX = u.x + nx * 35;
+                        u.targetY = u.y + ny * 35;
+                        u.preferredAngle = Math.atan2(this.pointer.y - u.y, this.pointer.x - u.x);
+                    });
+                }
+
+                // Update Soldiers
+                for (const u of this.units) {
+                    u.update(dt, this);
+                }
+
+                // Update Bullets
+                for (let i = this.bullets.length - 1; i >= 0; i--) {
+                    const b = this.bullets[i];
+                    b.prevX = b.x;
+                    b.prevY = b.y;
+                    b.x += b.vx * dt;
+                    b.y += b.vy * dt;
+                    b.life -= dt;
+
+                    let hit = false;
+
+                    // Check collision with walls & sandbags
+                    for (const obs of this.obstacles) {
+                        if (obs.type === 'wall' || obs.type === 'sandbag') {
+                            const dx = b.x - obs.x;
+                            const dy = b.y - obs.y;
+                            const cos = Math.cos(-obs.angle);
+                            const sin = Math.sin(-obs.angle);
+                            const lx = dx * cos - dy * sin;
+                            const ly = dx * sin + dy * cos;
+                            if (Math.abs(lx) <= obs.w / 2 && Math.abs(ly) <= obs.h / 2) {
+                                if (obs.type === 'wall' || Math.random() < 0.45) {
+                                    hit = true;
+                                    this.spawnImpactSparks(b.x, b.y, '#64748b', 4);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // Check collision with opposing units
+                    if (!hit) {
+                        for (const u of this.units) {
+                            if (u.team === b.team || u.dead) continue;
+                            if (Math.hypot(b.x - u.x, b.y - u.y) <= u.radius + 2) {
+                                // Cover damage mitigation
+                                const damageMult = 1 - u.inCover;
+                                u.hp -= b.damage * damageMult;
+                                u.hitFlash = 1.0;
+                                hit = true;
+                                if (b.team === 'ally') this.shotsHit++;
+
+                                const inkColor = u.team === 'ally' ? '#1d4ed8' : '#b91c1c';
+                                this.spawnImpactSparks(b.x, b.y, inkColor, 6);
+
+                                if (u.hp <= 0) {
+                                    u.dead = true;
+                                    this.decals.push({
+                                        type: 'fallen',
+                                        x: u.x,
+                                        y: u.y,
+                                        angle: u.angle,
+                                        team: u.team
+                                    });
+                                    this.updateHUD();
+                                    this.checkBattleOutcome();
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    if (hit || b.life <= 0 || b.x < 0 || b.x > this.width || b.y < 0 || b.y > this.height) {
+                        this.bullets.splice(i, 1);
+                    }
+                }
+
+                // Update Thrown Grenades & Smokes
+                for (let i = this.grenades.length - 1; i >= 0; i--) {
+                    const g = this.grenades[i];
+                    g.progress += dt / g.duration;
+                    g.x = g.startX + (g.targetX - g.startX) * g.progress;
+                    g.y = g.startY + (g.targetY - g.startY) * g.progress;
+
+                    if (g.progress >= 1) {
+                        if (g.type === 'frag') {
+                            sound.playExplosion();
+                            this.decals.push({ type: 'crater', x: g.targetX, y: g.targetY, r: 26 });
+                            this.particles.push({
+                                type: 'ring',
+                                x: g.targetX, y: g.targetY,
+                                r: 6, maxR: 88, alpha: 1, color: '#dc2626'
+                            });
+                            this.spawnImpactSparks(g.targetX, g.targetY, '#1e242b', 18);
+
+                            // Damage units in blast radius
+                            for (const u of this.units) {
+                                if (u.dead) continue;
+                                const d = Math.hypot(u.x - g.targetX, u.y - g.targetY);
+                                if (d <= 92) {
+                                    const dmg = (1 - d / 92) * 95 * (1 - u.inCover * 0.5);
+                                    u.hp -= dmg;
+                                    u.hitFlash = 1;
+                                    if (u.hp <= 0) {
+                                        u.dead = true;
+                                        this.decals.push({ type: 'fallen', x: u.x, y: u.y, angle: u.angle, team: u.team });
+                                    }
+                                }
+                            }
+                            this.updateHUD();
+                            this.checkBattleOutcome();
+                        } else if (g.type === 'smoke') {
+                            this.smokes.push({
+                                x: g.targetX,
+                                y: g.targetY,
+                                r: 78,
+                                life: 11.0,
+                                maxLife: 11.0
+                            });
+                        }
+                        this.grenades.splice(i, 1);
+                    }
+                }
+
+                // Update Smoke Clouds
+                for (let i = this.smokes.length - 1; i >= 0; i--) {
+                    this.smokes[i].life -= dt;
+                    if (this.smokes[i].life <= 0) this.smokes.splice(i, 1);
+                }
+
+                // Update Particles
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    if (p.type === 'ring') {
+                        p.r += (p.maxR - p.r) * dt * 8;
+                        p.alpha -= dt * 2.2;
+                        if (p.alpha <= 0) this.particles.splice(i, 1);
+                    } else {
+                        p.x += p.vx * dt;
+                        p.y += p.vy * dt;
+                        p.life -= dt;
+                        if (p.life <= 0) this.particles.splice(i, 1);
+                    }
+                }
+            }
+
+            spawnImpactSparks(x, y, color, count = 5) {
+                for (let i = 0; i < count; i++) {
+                    const a = Math.random() * Math.PI * 2;
+                    const sp = 25 + Math.random() * 80;
+                    this.particles.push({
+                        type: 'spark',
+                        x, y,
+                        vx: Math.cos(a) * sp,
+                        vy: Math.sin(a) * sp,
+                        life: 0.25 + Math.random() * 0.2,
+                        maxLife: 0.45,
+                        color,
+                        size: 2 + Math.random() * 2.2
+                    });
+                }
+            }
+
+            checkBattleOutcome() {
+                const alliesAlive = this.units.filter(u => u.team === 'ally' && !u.dead).length;
+                const enemiesAlive = this.units.filter(u => u.team === 'enemy' && !u.dead).length;
+
+                if (alliesAlive === 0 || enemiesAlive === 0) {
+                    this.battleEnded = true;
+                    const won = alliesAlive > 0;
+                    const modal = document.getElementById('endGameModal');
+                    const badge = document.getElementById('endGameBadge');
+                    const title = document.getElementById('endGameTitle');
+                    const desc = document.getElementById('endGameDesc');
+
+                    badge.textContent = won ? 'انتصار تكتيكي ساحق' : 'سقطت الكتيبة';
+                    badge.className = `inline-block px-3 py-1 mb-2 text-xs font-black text-white rounded-md border-2 border-slate-900 ${won ? 'bg-blue-700' : 'bg-red-700'}`;
+                    title.textContent = won ? 'حسمت كتيبتك المعركة!' : 'تفوقت الكتيبة المعادية!';
+                    desc.textContent = won
+                        ? 'أحسنت قيادة الفصائل وتوزيع خطوط النار والتغطية بأقل الخسائر.'
+                        : 'استخدم الخنادق، الدخان، ورسم خطوط الالتفاف بالزر الأيمن للتغلب على دفاعاتهم.';
+
+                    document.getElementById('statSurvivors').textContent = `${alliesAlive} / 12`;
+                    const acc = this.shotsFired > 0 ? Math.round((this.shotsHit / this.shotsFired) * 100) : 0;
+                    document.getElementById('statAccuracy').textContent = `${acc}%`;
+                    document.getElementById('statTime').textContent = `${Math.round(this.elapsedTime)}ث`;
+
+                    modal.classList.remove('hidden');
+                }
+            }
+
+            render(time) {
+                const ctx = this.ctx;
+                ctx.clearRect(0, 0, this.width, this.height);
+
+                // 1. Hand-drawn Tactical Paper Background & Subtle Blueprint Grid
+                ctx.fillStyle = '#f4efe6';
+                ctx.fillRect(0, 0, this.width, this.height);
+
+                const gridStep = 44;
+                ctx.strokeStyle = 'rgba(100, 116, 139, 0.14)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                for (let x = gridStep; x < this.width; x += gridStep) {
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, this.height);
+                }
+                for (let y = gridStep; y < this.height; y += gridStep) {
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(this.width, y);
+                }
+                ctx.stroke();
+
+                // 2. Render Battlefield Decals (Craters & Fallen Helmet Sketches)
+                for (const d of this.decals) {
+                    ctx.save();
+                    ctx.translate(d.x, d.y);
+                    if (d.type === 'crater') {
+                        ctx.strokeStyle = 'rgba(30, 36, 43, 0.45)';
+                        ctx.fillStyle = 'rgba(30, 36, 43, 0.10)';
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, d.r, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                    } else if (d.type === 'fallen') {
+                        ctx.rotate(d.angle);
+                        ctx.globalAlpha = 0.45;
+                        ctx.strokeStyle = d.team === 'ally' ? '#1d4ed8' : '#b91c1c';
+                        ctx.lineWidth = 1.6;
+                        // Small sketched helmet & cross mark
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+                        ctx.moveTo(-5, -5); ctx.lineTo(5, 5);
+                        ctx.moveTo(5, -5);  ctx.lineTo(-5, 5);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+
+                // 3. Render Ground Obstacles (Trenches, Sandbags, Walls)
+                for (const obs of this.obstacles) {
+                    if (obs.type === 'tree') continue; // Trees drawn above units for canopy effect
+                    this.drawObstacle(ctx, obs);
+                }
+
+                // 4. Render Active Move Order Lines for Selected Units
+                ctx.save();
+                ctx.strokeStyle = 'rgba(29, 78, 216, 0.25)';
+                ctx.lineWidth = 1.4;
+                ctx.setLineDash([4, 4]);
+                for (const u of this.units) {
+                    if (u.team === 'ally' && !u.dead && u.selected) {
+                        const dist = Math.hypot(u.targetX - u.x, u.targetY - u.y);
+                        if (dist > 10) {
+                            ctx.beginPath();
+                            ctx.moveTo(u.x, u.y);
+                            ctx.lineTo(u.targetX, u.targetY);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                ctx.restore();
+
+                // 5. Render All Living Infantry Soldiers (Head & Shoulders Top-Down)
+                for (const u of this.units) {
+                    if (!u.dead) {
+                        SketchArtist.drawSoldier(ctx, u, time);
+                    }
+                }
+
+                // 6. Render Tree Canopies (Hand-drawn sketchy foliage circles)
+                for (const obs of this.obstacles) {
+                    if (obs.type === 'tree') {
+                        this.drawObstacle(ctx, obs);
+                    }
+                }
+
+                // 7. Render Bullets (Ink tracer streaks)
+                ctx.save();
+                ctx.lineCap = 'round';
+                for (const b of this.bullets) {
+                    ctx.strokeStyle = b.team === 'ally' ? '#1d4ed8' : '#b91c1c';
+                    ctx.lineWidth = 2.4;
+                    ctx.beginPath();
+                    ctx.moveTo(b.prevX, b.prevY);
+                    ctx.lineTo(b.x, b.y);
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                // 8. Render Airborne Grenades
+                for (const g of this.grenades) {
+                    const arcHeight = Math.sin(g.progress * Math.PI) * 38;
+                    ctx.save();
+                    // Shadow on ground
+                    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                    ctx.beginPath();
+                    ctx.arc(g.x, g.y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Grenade body in air
+                    ctx.translate(g.x, g.y - arcHeight);
+                    ctx.fillStyle = g.type === 'frag' ? '#b91c1c' : '#475569';
+                    ctx.strokeStyle = '#1e242b';
+                    ctx.lineWidth = 1.8;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 5.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // 9. Render Hand-Drawn Smoke Clouds
+                for (const s of this.smokes) {
+                    const alpha = Math.min(0.78, (s.life / 2.0) * 0.78);
+                    ctx.save();
+                    ctx.globalAlpha = alpha;
+                    SketchArtist.drawDoubleSketchCircle(
+                        ctx,
+                        s.x,
+                        s.y,
+                        s.r,
+                        'rgba(226, 232, 240, 0.88)',
+                        '#475569',
+                        2,
+                        Math.floor(s.x)
+                    );
+                    ctx.restore();
+                }
+
+                // 10. Render Particles
+                for (const p of this.particles) {
+                    ctx.save();
+                    if (p.type === 'ring') {
+                        ctx.strokeStyle = p.color;
+                        ctx.globalAlpha = Math.max(0, p.alpha);
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                        ctx.stroke();
+                    } else {
+                        ctx.fillStyle = p.color;
+                        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                // 11. Render Interactive Tactical Overlays (Selection Box, Line Formation Preview, or Ability Aim)
+                this.renderControlOverlays(ctx);
+            }
+
+            drawObstacle(ctx, obs) {
+                ctx.save();
+                ctx.translate(obs.x, obs.y);
+                if (obs.angle) ctx.rotate(obs.angle);
+
+                if (obs.type === 'trench') {
+                    // Recessed earth trench with wooden planks & sketch hatching
+                    ctx.fillStyle = '#dfd6c3';
+                    ctx.strokeStyle = '#475569';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.roundRect(-obs.w / 2, -obs.h / 2, obs.w, obs.h, 8);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Inner trench floor planks
+                    ctx.strokeStyle = 'rgba(30, 36, 43, 0.25)';
+                    ctx.lineWidth = 1.2;
+                    for (let x = -obs.w / 2 + 12; x < obs.w / 2 - 8; x += 14) {
+                        ctx.beginPath();
+                        ctx.moveTo(x, -obs.h / 2 + 5);
+                        ctx.lineTo(x, obs.h / 2 - 5);
+                        ctx.stroke();
+                    }
+                } else if (obs.type === 'sandbag') {
+                    // Row of overlapping sketched sandbags
+                    const bagCount = Math.max(3, Math.floor(obs.w / 22));
+                    const bagW = obs.w / bagCount;
+                    ctx.fillStyle = '#e7d8b9';
+                    ctx.strokeStyle = '#1e242b';
+                    ctx.lineWidth = 2;
+                    for (let i = 0; i < bagCount; i++) {
+                        const bx = -obs.w / 2 + i * bagW;
+                        ctx.beginPath();
+                        ctx.roundRect(bx, -obs.h / 2, bagW + 2, obs.h, 6);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
+                } else if (obs.type === 'wall') {
+                    // Solid cross-hatched stone wall
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.strokeStyle = '#1e242b';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.roundRect(-obs.w / 2, -obs.h / 2, obs.w, obs.h, 4);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Diagonal sketch hatching
+                    ctx.strokeStyle = '#1e242b';
+                    ctx.lineWidth = 1.1;
+                    for (let x = -obs.w / 2 + 8; x < obs.w / 2; x += 12) {
+                        ctx.beginPath();
+                        ctx.moveTo(x, -obs.h / 2);
+                        ctx.lineTo(x - 8, obs.h / 2);
+                        ctx.stroke();
+                    }
+                } else if (obs.type === 'tree') {
+                    SketchArtist.drawDoubleSketchCircle(
+                        ctx,
+                        0,
+                        0,
+                        obs.r,
+                        'rgba(187, 247, 208, 0.65)',
+                        '#166534',
+                        2.2,
+                        Math.floor(obs.x)
+                    );
+                    // Tree center trunk dot
+                    ctx.fillStyle = '#14532d';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+
+            renderControlOverlays(ctx) {
+                // Ability targeting preview ring
+                if (this.activeAbility) {
+                    ctx.save();
+                    ctx.strokeStyle = this.activeAbility === 'frag' ? '#dc2626' : '#475569';
+                    ctx.fillStyle = this.activeAbility === 'frag' ? 'rgba(220, 38, 38, 0.12)' : 'rgba(71, 85, 105, 0.15)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([6, 4]);
+                    const r = this.activeAbility === 'frag' ? 92 : 78;
+                    ctx.beginPath();
+                    ctx.arc(this.pointer.x, this.pointer.y, r, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                if (!this.pointer.isDown) return;
+
+                if (this.pointer.action === 'box') {
+                    const x = Math.min(this.pointer.startX, this.pointer.x);
+                    const y = Math.min(this.pointer.startY, this.pointer.y);
+                    const w = Math.abs(this.pointer.x - this.pointer.startX);
+                    const h = Math.abs(this.pointer.y - this.pointer.startY);
+                    if (w > 6 || h > 6) {
+                        ctx.save();
+                        ctx.fillStyle = 'rgba(29, 78, 216, 0.10)';
+                        ctx.strokeStyle = '#1d4ed8';
+                        ctx.lineWidth = 2;
+                        ctx.setLineDash([6, 4]);
+                        ctx.fillRect(x, y, w, h);
+                        ctx.strokeRect(x, y, w, h);
+                        ctx.restore();
+                    }
+                } else if (this.pointer.action === 'line') {
+                    const dragDist = Math.hypot(this.pointer.x - this.pointer.startX, this.pointer.y - this.pointer.startY);
+                    if (dragDist >= 18) {
+                        const allies = this.getSelectedAllies();
+                        const slots = this.computeLineSlots(
+                            this.pointer.startX,
+                            this.pointer.startY,
+                            this.pointer.x,
+                            this.pointer.y,
+                            allies.length
+                        );
+
+                        ctx.save();
+                        ctx.strokeStyle = '#1d4ed8';
+                        ctx.lineWidth = 2.2;
+                        ctx.setLineDash([6, 4]);
+                        ctx.beginPath();
+                        ctx.moveTo(this.pointer.startX, this.pointer.startY);
+                        ctx.lineTo(this.pointer.x, this.pointer.y);
+                        ctx.stroke();
+
+                        // Draw ghost soldier positions & facing arrows along the line!
+                        ctx.setLineDash([]);
+                        for (const s of slots) {
+                            ctx.fillStyle = 'rgba(29, 78, 216, 0.28)';
+                            ctx.beginPath();
+                            ctx.arc(s.x, s.y, 10, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.stroke();
+
+                            // Direction arrow showing where the soldier's rifle & shoulders will aim
+                            const ax = s.x + Math.cos(s.angle) * 20;
+                            const ay = s.y + Math.sin(s.angle) * 20;
+                            ctx.beginPath();
+                            ctx.moveTo(s.x, s.y);
+                            ctx.lineTo(ax, ay);
+                            ctx.stroke();
+                        }
+                        ctx.restore();
+                    }
+                }
+            }
+        }
+
+        window.onload = function () {
+            const game = new BattalionGame();
+            let lastTime = performance.now();
+
+            function gameLoop(now) {
+                const dt = Math.min(0.05, (now - lastTime) / 1000);
+                lastTime = now;
+
+                game.update(dt);
+                game.render(now);
+
+                requestAnimationFrame(gameLoop);
+            }
+
+            requestAnimationFrame(gameLoop);
+        };
+    </script>
+</body>
+</html>

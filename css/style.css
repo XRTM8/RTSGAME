@@ -1,0 +1,200 @@
+:root {
+    --paper-bg: #f4efe6;
+    --ink-dark: #1e242b;
+    --ink-blue: #1d4ed8;
+    --ink-red: #b91c1c;
+    --ink-pencil: #64748b;
+}
+
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    font-family: 'Cairo', 'Tajawal', sans-serif;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #e5dec9;
+    color: var(--ink-dark);
+}
+
+/* Hand-drawn sketchy border effect */
+.sketch-box {
+    background: rgba(247, 243, 232, 0.94);
+    border: 2.5px solid #1e242b;
+    border-radius: 8px 14px 10px 12px / 12px 8px 14px 10px;
+    box-shadow: 3px 4px 0px #1e242b;
+    transition: all 0.15s ease;
+}
+
+.sketch-btn {
+    background: #fdfbf7;
+    border: 2px solid #1e242b;
+    border-radius: 10px 6px 12px 8px / 6px 12px 8px 10px;
+    box-shadow: 2px 3px 0px #1e242b;
+    transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease;
+    cursor: pointer;
+}
+
+.sketch-btn:hover {
+    background: #f1ece1;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 4px 0px #1e242b;
+}
+
+.sketch-btn:active, .sketch-btn.active {
+    transform: translate(1px, 2px);
+    box-shadow: 0px 1px 0px #1e242b;
+    background: #1e242b;
+    color: #fdfbf7;
+}
+
+.sketch-btn.active-blue {
+    background: #1d4ed8;
+    color: #ffffff;
+    border-color: #1e242b;
+    transform: translate(1px, 1px);
+    box-shadow: 1px 2px 0px #1e242b;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    cursor: crosshair;
+}
+
+/* Custom subtle animation for active tactical badge */
+@keyframes pulse-ink {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+}
+
+.ink-pulse {
+    animation: pulse-ink 2s infinite ease-in-out;
+}
+
+/* Map Editor Dock Floating Toolbar */
+.editor-dock {
+    position: absolute;
+    top: 60px;
+    right: 16px;
+    z-index: 25;
+}
+
+/* Scrollbar styling for dialogs */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(30, 36, 43, 0.08);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+    background: #1e242b;
+    border-radius: 4px;
+}
+
+/* ==========================================================================
+   TACTICAL NIGHT OPERATIONS THEME (الوضع والماب الليلي التكتيكي)
+   ========================================================================== */
+body.night-theme, html.night-theme {
+    background-color: #0b0f15 !important;
+    color: #e2e8f0 !important;
+}
+
+body.night-theme .sketch-box {
+    background: rgba(18, 24, 33, 0.96) !important;
+    border-color: #38bdf8 !important;
+    box-shadow: 3px 4px 0px #05080c !important;
+    color: #f1f5f9 !important;
+}
+
+body.night-theme .sketch-btn {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    box-shadow: 2px 3px 0px #090d14 !important;
+    color: #f8fafc !important;
+}
+
+body.night-theme .sketch-btn:hover {
+    background: #334155 !important;
+    box-shadow: 3px 4px 0px #090d14 !important;
+}
+
+body.night-theme .sketch-btn:active, body.night-theme .sketch-btn.active {
+    background: #0f172a !important;
+    color: #38bdf8 !important;
+    border-color: #38bdf8 !important;
+}
+
+body.night-theme .sketch-btn.active-blue {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #60a5fa !important;
+    box-shadow: 1px 2px 0px #0b111c !important;
+}
+
+body.night-theme .text-slate-900,
+body.night-theme .text-slate-800,
+body.night-theme .text-slate-700 {
+    color: #f1f5f9 !important;
+}
+
+body.night-theme .text-slate-600,
+body.night-theme .text-slate-500 {
+    color: #94a3b8 !important;
+}
+
+body.night-theme .bg-white\/85,
+body.night-theme .bg-white\/90,
+body.night-theme .bg-white\/80,
+body.night-theme .bg-white\/40,
+body.night-theme .bg-white {
+    background-color: rgba(30, 41, 59, 0.9) !important;
+    border-color: #475569 !important;
+    color: #f1f5f9 !important;
+}
+
+body.night-theme .bg-amber-50,
+body.night-theme .bg-amber-100 {
+    background-color: rgba(217, 119, 6, 0.22) !important;
+    color: #fde68a !important;
+}
+
+body.night-theme .bg-emerald-50,
+body.night-theme .bg-emerald-100 {
+    background-color: rgba(5, 150, 105, 0.22) !important;
+    color: #a7f3d0 !important;
+}
+
+body.night-theme .bg-purple-50,
+body.night-theme .bg-purple-100 {
+    background-color: rgba(147, 51, 234, 0.22) !important;
+    color: #e9d5ff !important;
+}
+
+body.night-theme .bg-blue-50,
+body.night-theme .bg-blue-100 {
+    background-color: rgba(37, 99, 235, 0.25) !important;
+    color: #bfdbfe !important;
+}
+
+body.night-theme #deploymentDock {
+    background: rgba(18, 24, 33, 0.96) !important;
+    border-color: #38bdf8 !important;
+}
+
+body.night-theme #tacticalToast {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border-color: #38bdf8 !important;
+    color: #38bdf8 !important;
+}
+
